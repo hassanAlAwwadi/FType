@@ -2,7 +2,7 @@ module Ship where
 
 import Classess
 import Graphics.Gloss
-import Weapon(simple, bullet, Gun,Bullet)
+import Weapon(simple, Gun,Bullet, cooldown, shoot)
 import Graphics.Gloss.Interface.IO.Game
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
@@ -18,7 +18,7 @@ data Ship = Ship
   timer :: Float
   } 
 
-ship = Ship (0,0) 5 (0,0) simple [bullet] 0 0  
+ship = Ship (0,0) 5 (0,0) simple [] 0 0  
 
 instance Paint Ship where
     paint (Ship (x,y) v (dx,dy) _ b _ _) = do 
@@ -42,4 +42,9 @@ instance Handle Ship where
 
 instance Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@(Ship p v d _ _ _ t)  = pure $ (s { pos = p L.+ v L.* d, timer = t + f} :: Ship)
+    tick f s@(Ship p v d g bs _ t)  = do 
+        let np =  p L.+ v L.* d
+        let (nb, nt) = if t + f > cooldown g
+            then (shoot g np : bs, 0)
+            else (bs, t + f)
+        return s {bullets = nb, timer = nt, pos = np }
