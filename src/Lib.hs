@@ -14,42 +14,56 @@ import Enemy
 someFunc :: IO ()
 someFunc = playIO FullScreen black 30 (Menu 0) paint handle tick
 
-data GameState = Paused World | Scrolling World | BossFight World | Menu Int
+data WorldState = Paused WorldState | Scrolling | BossFight deriving (Show)
+pause (Paused s) = s
+pause  s         = Paused s
+
+data GameState = Playing World WorldState | Menu Int
 
 instance Paint GameState where
   paint (Menu x)  = pure $ pictures [mainMenu, translate 0 (fromIntegral $ x * (-250)) menuSelector]  where 
     mainMenu = pictures [translate (-50) 250 $ color white $ Text "Level 1",
                          translate (-50) 0 $ color white $ Text    "High scores"]
     menuSelector = translate (350) 300 $ color yellow $ rectangleWire 800 200
-  paint (Scrolling w) = paint w
+  paint (Playing w (Paused s)) = do 
+    pw <- paint w
+    let pp = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
+    pure $ pictures [pw, pp]
+  paint (Playing w _) = paint w
+
+
 
 instance Handle GameState where 
-    handle (EventKey (SpecialKey KeyEsc)   Down _ _) _ = exitWith ExitSuccess
+    handle (EventKey (SpecialKey KeyEsc)   Down _ _) _  = exitWith ExitSuccess
+    handle (EventKey (SpecialKey KeySpace) Down _ _) (Playing w s) = pure $ Playing w $ pause s
+    handle _ g@(Playing w (Paused s))                   = pure g
     handle e (Menu n) = pure $ case e of 
       EventKey (Char 'w')            Down _ _ -> Menu (max 0 $ n-1)
       EventKey (Char 's')            Down _ _ -> Menu (min 1 $ n+1)
-      EventKey (SpecialKey KeyEnter) Down _ _ -> case n of 
-                                            0 -> getLevel 1
-                                            _ -> Menu n
+      EventKey (SpecialKey KeyEnter) Down _ _ -> menuAction n 
       _                                       -> Menu n
-    handle e (Scrolling w) =  do nw <- handle e w
-                                 return $ Scrolling nw
-    handle _ g = pure g
+    handle e (Playing w s)   = do nw <- handle e w
+                                  return $ Playing nw s
  
-getLevel 1 = Scrolling $ World {
-    player = baseShip,
-    enemies = [],
-    lives = 3,
-    score = 0,
-    level = 0
-    } where 
-      baseShip    = Ship (0,0) 5 (0,0) (Simple 10 10) [] 1 
+menuAction 0 = Playing world Scrolling where 
+    world = World {
+        player = baseShip,
+        enemies = [],
+        lives = 3,
+        score = 0,
+        level = 0,
+        timelapse = 0
+    } 
+    baseShip    = Ship (0,0) 5 (0,0) (Simple 10 10) [] 1 
+menuAction n = Menu n
   
 instance Tick GameState where
-    tick f (Scrolling w) = do 
+    tick f g@(Playing _ (Paused _)) = pure g
+    tick f (Playing w s)            = do 
         nw <- tick f w
-        return $ Scrolling nw
-    tick _ a = pure a 
+        return $ Playing nw s
+    tick _ a                        = pure a 
+
 
 data World = World 
   {
@@ -57,11 +71,15 @@ data World = World
   enemies :: [Enemy],
   lives :: Int, 
   score :: Int,
-  level :: Int 
+  level :: Int,
+  timelapse :: Float
   }
 
 instance Paint World where
-    paint w = paint $ player w
+    paint w = do 
+        pw <- paint $ player w
+        let pt = translate 0 400 . color white . text . show . floor $ timelapse w  
+        return $ pictures [pw, pt]
 
 instance Handle World where
     handle e w = do 
@@ -71,5 +89,6 @@ instance Handle World where
 instance Tick World where 
     tick f w = do 
         p <- tick f $ player w
-        return w {player = p}
+        let t = timelapse w
+        pure w {player = p, timelapse = t + f}
 
