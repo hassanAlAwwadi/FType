@@ -18,10 +18,13 @@ data Ship = Ship
   timer :: Float
   } 
 
-ship = Ship (0,0) 5 (0,0) simple [] 1 0
+ship = Ship (0,0) 5 (0,0) (Simple 10 10) [Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}] 1 
 
 instance Paint Ship where
-    paint (Ship (x,y) v (dx,dy) _ _ _ _) = pure $ translate x y shipDrawing where 
+    paint (Ship (x,y) v (dx,dy) _ b _) = do 
+      pb <- paint b
+      let ps = translate x y shipDrawing 
+      pure $ pictures [ps,pb] where 
       shipDrawing = color blue $ rectangleSolid 40 20 
 
 instance Handle Ship where
