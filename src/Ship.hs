@@ -42,4 +42,7 @@ instance Handle Ship where
 
 instance Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@(Ship p v d _ _ _ t)  = pure $ (s { pos = p L.+ v L.* d, timer = t + f} :: Ship)
+    tick f s@(Ship p v d _ b _ t)  = do
+      tb <- tick f b
+      let ts = (s { pos = p L.+ v L.* d, bullets = tb , timer = t + f})
+      pure $ ts
