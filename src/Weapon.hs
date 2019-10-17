@@ -22,3 +22,6 @@ instance Tick Bullet where
     tick f b@(Bullet _ p v d)  = pure $ (b { pos = p L.+ v L.* d})
     
 bullet = Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}
+
+shoot :: Gun -> Point ->  Bullet
+shoot (Simple c s _) p = Bullet { size = c, pos = p, speed = s, direction = (1,0)}
