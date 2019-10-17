@@ -19,4 +19,8 @@ instance Paint Enemy where
 
 instance Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
-    tick f e@(Enemy _ p v d _ _ _)  = pure $ (e { pos = p L.+ v L.* d})
+    tick f e@(Enemy _ p v d _ _ b)  =do
+        tb <- tick f b
+        let te = (e { pos = p L.+ v L.* d, bullets = tb})
+        pure $ te
+        
