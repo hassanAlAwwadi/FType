@@ -1,4 +1,4 @@
-module Enemy(Enemy()) where
+module Enemy where
 
 import Classess
 import Weapon

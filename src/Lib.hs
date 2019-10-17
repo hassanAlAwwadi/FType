@@ -24,7 +24,7 @@ instance Paint GameState where
   paint (Menu x)  = pure $ pictures [mainMenu, translate 0 (fromIntegral $ x * (-250)) menuSelector]  where 
     mainMenu = pictures [translate (-50) 250 $ color white $ Text "Level 1",
                          translate (-50) 0 $ color white $ Text    "High scores"]
-    menuSelector = translate (350) 300 $ color yellow $ rectangleWire 800 200
+    menuSelector = translate 350 300 $ color yellow $ rectangleWire 800 200
   paint (Playing w (Paused s)) = do 
     pw <- paint w
     let pp = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
@@ -34,7 +34,7 @@ instance Paint GameState where
 
 
 instance Handle GameState where 
-    handle (EventKey (SpecialKey KeyEsc)   Down _ _) _  = exitWith ExitSuccess
+    handle (EventKey (SpecialKey KeyEsc)   Down _ _) _  = exitSuccess
     handle (EventKey (SpecialKey KeySpace) Down _ _) (Playing w s) = pure $ Playing w $ pause s
     handle _ g@(Playing w (Paused s))                   = pure g
     handle e (Menu n) = pure $ case e of 
@@ -47,14 +47,13 @@ instance Handle GameState where
  
 menuAction 0 = Playing world Scrolling where 
     world = World {
-        player = baseShip,
-        enemies = [],
+        player = ship,
+        enemies = [Enemy { size = 10, pos = (10,10), speed =5, direction = (0,0), health = 10, gun = simple, bullets = [] } ],
         lives = 3,
         score = 0,
         level = 0,
-        timelapse = 0
+        timer = 0
     } 
-    baseShip    = Ship (0,0) 5 (0,0) (Simple 10 10) [] 1 
 menuAction n = Menu n
   
 instance Tick GameState where
@@ -72,14 +71,15 @@ data World = World
   lives :: Int, 
   score :: Int,
   level :: Int,
-  timelapse :: Float
+  timer :: Float
   }
 
 instance Paint World where
     paint w = do 
         pw <- paint $ player w
-        let pt = translate 0 400 . color white . text . show . floor $ timelapse w  
-        return $ pictures [pw, pt]
+        pe <- paint $ enemies w
+        let pt = translate 0 400 . color white . text . show . floor $ timer (w::World)  
+        return $ pictures [pw, pt, pe]
 
 instance Handle World where
     handle e w = do 
@@ -89,6 +89,7 @@ instance Handle World where
 instance Tick World where 
     tick f w = do 
         p <- tick f $ player w
-        let t = timelapse w
-        pure w {player = p, timelapse = t + f}
+        e <- tick f $ enemies f
+        let t = timer (w::World)
+        pure w {player = p, timer = t + f}
 

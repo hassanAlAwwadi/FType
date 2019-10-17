@@ -2,8 +2,8 @@ module Ship where
 
 import Classess
 import Graphics.Gloss
+import Weapon(simple, Gun,Bullet)
 import Graphics.Gloss.Interface.IO.Game
-import Weapon(Gun,Bullet) 
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
 
@@ -14,11 +14,14 @@ data Ship = Ship
   direction :: Vector,
   gun :: Gun, 
   bullets :: [Bullet],
-  bombs :: Int
+  bombs :: Int,
+  timer :: Float
   } 
 
+ship = Ship (0,0) 5 (0,0) simple [] 1 0
+
 instance Paint Ship where
-    paint (Ship (x,y) v (dx,dy) _ _ _) = pure $ translate x y shipDrawing where 
+    paint (Ship (x,y) v (dx,dy) _ _ _ _) = pure $ translate x y shipDrawing where 
       shipDrawing = color blue $ rectangleSolid 40 20 
 
 instance Handle Ship where
@@ -36,4 +39,4 @@ instance Handle Ship where
 
 instance Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@(Ship p v d _ _ _)  = pure $ (s { pos = p L.+ v L.* d} :: Ship)
+    tick f s@(Ship p v d _ _ _ t)  = pure $ (s { pos = p L.+ v L.* d, timer = t + f} :: Ship)
