@@ -44,7 +44,8 @@ instance Tick Ship where
     --tick :: Float -> Ship -> IO Ship
     tick f s@(Ship p v d g bs _ t)  = do 
         let np =  p L.+ v L.* d
+        tb <- tick f bs
         let (nb, nt) = if t + f > cooldown g
-            then (shoot g np : bs, 0)
-            else (bs, t + f)
+            then (shoot g np : tb, 0)
+            else (tb, t + f)
         return s {bullets = nb, timer = nt, pos = np }
