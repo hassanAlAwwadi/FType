@@ -14,3 +14,5 @@ data Bullet = Bullet { size :: Float, pos :: Point, speed :: Float, direction ::
 instance Paint Bullet where
     paint (Bullet s (x,y) _ _) = pure $ translate x y bulletDrawing where 
       bulletDrawing = color yellow $ circleSolid s
+
+bullet = Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}

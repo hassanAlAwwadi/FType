@@ -89,7 +89,6 @@ instance Handle World where
 instance Tick World where 
     tick f w = do 
         p <- tick f $ player w
-        e <- tick f $ enemies f
         let t = timer (w::World)
         pure w {player = p, timer = t + f}
 

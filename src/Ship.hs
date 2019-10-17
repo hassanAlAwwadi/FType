@@ -2,7 +2,7 @@ module Ship where
 
 import Classess
 import Graphics.Gloss
-import Weapon(simple, Gun,Bullet)
+import Weapon(simple, bullet, Gun,Bullet)
 import Graphics.Gloss.Interface.IO.Game
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
@@ -18,10 +18,10 @@ data Ship = Ship
   timer :: Float
   } 
 
-ship = Ship (0,0) 5 (0,0) (Simple 10 10) [Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}] 1 
+ship = Ship (0,0) 5 (0,0) simple [bullet] 0 0  
 
 instance Paint Ship where
-    paint (Ship (x,y) v (dx,dy) _ b _) = do 
+    paint (Ship (x,y) v (dx,dy) _ b _ _) = do 
       pb <- paint b
       let ps = translate x y shipDrawing 
       pure $ pictures [ps,pb] where 
