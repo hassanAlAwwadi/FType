@@ -46,6 +46,6 @@ instance Tick Ship where
         let np =  p L.+ v L.* d
         tb <- tick f bs
         let (nb, nt) = if t + f > cooldown g
-            then (shoot g np : tb, 0)
+            then (shoot g np (1,0) : tb, 0)
             else (tb, t + f)
         return s {bullets = nb, timer = nt, pos = np }

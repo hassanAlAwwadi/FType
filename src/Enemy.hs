@@ -1,17 +1,17 @@
 module Enemy where
 
 import Classess
-import Weapon(Gun, Bullet)
+import Weapon(Gun, Bullet, shoot, cooldown)
 import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
 
 --import Weapon as W
 
-data Enemy = Enemy { size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet] } 
+data Enemy = Enemy { size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet], timer :: Float } 
 
 instance Paint Enemy where
-    paint (Enemy s (x,y) _ _ _ _  b ) = do
+    paint (Enemy s (x,y) _ _ _ _  b _) = do
          pb <- paint b
          let pe = translate x y enemyDrawing 
          pure $ pictures [pe,pb] where 
@@ -19,8 +19,11 @@ instance Paint Enemy where
 
 instance Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
-    tick f e@(Enemy _ p v d _ _ b)  =do
+    tick f e@(Enemy _ p v d _ g b t)  =do
         tb <- tick f b
-        let te = (e { pos = p L.+ v L.* d, bullets = tb})
+        let (nb, nt) = if t + f > cooldown g
+            then (shoot g p ((-1), 0) : tb, 0)
+            else (tb, t + f)
+        let te = (e { pos = p L.+ v L.* d, bullets = nb, timer = nt})
         pure $ te
         

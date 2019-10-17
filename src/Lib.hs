@@ -48,7 +48,7 @@ instance Handle GameState where
 menuAction 0 = Playing world Scrolling where 
     world = World {
         player = ship,
-        enemies = [Enemy { size = 10, pos = (10,10), speed =5, direction = (0,0), health = 10, gun = simple, bullets = [] } ],
+        enemies = [Enemy { size = 10, pos = (10,10), speed =5, direction = (0,0), health = 10, gun = simple, bullets = [], timer = 0} ],
         lives = 3,
         score = 0,
         level = 0,
@@ -89,6 +89,7 @@ instance Handle World where
 instance Tick World where 
     tick f w = do 
         p <- tick f $ player w
+        e <- tick f $ enemies w
         let t = timer (w::World)
-        pure w {player = p, timer = t + f}
+        pure w {player = p, enemies = e, timer = t + f}
 
