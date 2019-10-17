@@ -18,7 +18,10 @@ data Ship = Ship
   } 
 
 instance Paint Ship where
-    paint (Ship (x,y) v (dx,dy) _ _ _) = pure $ translate x y shipDrawing where 
+    paint (Ship (x,y) v (dx,dy) _ b _) = do 
+      pb <- paint b
+      let ps = translate x y shipDrawing 
+      pure $ pictures [ps,pb] where 
       shipDrawing = color blue $ rectangleSolid 40 20 
 
 instance Handle Ship where

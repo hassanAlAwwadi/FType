@@ -54,7 +54,7 @@ menuAction 0 = Playing world Scrolling where
         level = 0,
         timelapse = 0
     } 
-    baseShip    = Ship (0,0) 5 (0,0) (Simple 10 10) [] 1 
+    baseShip    = Ship (0,0) 5 (0,0) (Simple 10 10) [Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}] 1 
 menuAction n = Menu n
   
 instance Tick GameState where

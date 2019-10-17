@@ -9,5 +9,8 @@ import Graphics.Gloss
 data Enemy = Enemy { size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet] } 
 
 instance Paint Enemy where
-    paint (Enemy s (x,y) _ _ _ _  _ ) = pure $ translate x y enemyDrawing where 
-        enemyDrawing = color red $ rectangleSolid s s 
+    paint (Enemy s (x,y) _ _ _ _  b ) = do
+         pb <- paint b
+         let pe = translate x y enemyDrawing 
+         pure $ pictures [pe,pb] where 
+         enemyDrawing = color red $ rectangleSolid s s 
