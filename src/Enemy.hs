@@ -26,4 +26,9 @@ instance Tick Enemy where
             else (tb, t + f)
         let te = (e { pos = p L.+ v L.* d, bullets = nb, timer = nt})
         pure $ te
-        
+    
+instance Collidable Enemy where
+    --size :: Enemy ->  (Float,Float)
+    size e = (Enemy.size e, Enemy.size e)
+    --position :: Enemy -> (Float,Float)
+    position e = pos e
