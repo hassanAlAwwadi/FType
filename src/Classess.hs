@@ -12,7 +12,7 @@ class Paint p where
 instance Paint p => Paint [p] where
     paint [] = return blank 
     paint ps = do 
-        paintings <- sequence $ map paint ps
+        paintings <- mapM paint ps
         return $ pictures paintings
 
 class Handle h where
@@ -20,11 +20,11 @@ class Handle h where
 
 instance Handle h => Handle [h] where 
     handle _ [] = return []
-    handle e hs = sequence $ map (handle e) hs
+    handle e hs = mapM (handle e) hs
 
 class Tick t where
     tick :: Float -> t -> IO t
 
 instance Tick h => Tick [h] where 
     tick f [] = return []
-    tick f hs = sequence $ map (tick f) hs
+    tick f hs = mapM (tick f) hs

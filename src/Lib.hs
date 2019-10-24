@@ -10,6 +10,7 @@ import Classess
 import Ship
 import Weapon
 import Enemy
+import World
 
 someFunc :: IO ()
 someFunc = playIO FullScreen black 30 (Menu 0) paint handle tick
@@ -35,8 +36,7 @@ instance Paint GameState where
 
 instance Handle GameState where 
     handle (EventKey (SpecialKey KeyEsc)   Down _ _) _  = exitSuccess
-    handle (EventKey (SpecialKey KeySpace) Down _ _) (Playing w s) = pure $ Playing w $ pause s
-    handle _ g@(Playing w (Paused s))                   = pure g
+    handle (EventKey (Char 'p') Down _ _) (Playing w s) = pure $ Playing w $ pause s
     handle e (Menu n) = pure $ case e of 
       EventKey (Char 'w')            Down _ _ -> Menu (max 0 $ n-1)
       EventKey (Char 's')            Down _ _ -> Menu (min 1 $ n+1)
@@ -64,32 +64,4 @@ instance Tick GameState where
     tick _ a                        = pure a 
 
 
-data World = World 
-  {
-  player :: Ship, 
-  enemies :: [Enemy],
-  lives :: Int, 
-  score :: Int,
-  level :: Int,
-  timer :: Float
-  }
-
-instance Paint World where
-    paint w = do 
-        pw <- paint $ player w
-        pe <- paint $ enemies w
-        let pt = translate 0 400 . color white . text . show . floor $ timer (w::World)  
-        return $ pictures [pw, pt, pe]
-
-instance Handle World where
-    handle e w = do 
-        p <- handle e $ player w
-        return w {player = p}
-
-instance Tick World where 
-    tick f w = do 
-        p <- tick f $ player w
-        e <- tick f $ enemies w
-        let t = timer (w::World)
-        pure w {player = p, enemies = e, timer = t + f}
 
