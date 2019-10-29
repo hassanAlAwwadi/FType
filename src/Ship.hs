@@ -19,7 +19,7 @@ data Ship = Ship
   size :: (Float,Float)
   }
 
-ship = Ship (0,0) 5 (0,0) simple [] 0 0 (40,20) 
+ship = Ship ((-420),0) 5 (0,0) simple [] 0 0 (40,20) 
 
 instance Paint Ship where
     paint (Ship (x,y) v (dx,dy) _ b _ _ (sx,sy)) = do 
@@ -56,3 +56,4 @@ instance Collidable Ship where
     size s = Ship.size s 
     --position :: Ship -> (Float,Float)
     position s = pos s 
+
