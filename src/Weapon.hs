@@ -23,11 +23,10 @@ instance Tick Bullet where
     
 bullet = Bullet { size = 1000, pos = (10,10), speed = 10, direction = (2,2)}
 
-shoot :: Gun -> Point -> Vector -> Bullet
-shoot (Simple c s _) p d = Bullet { size = c, pos = p, speed = s, direction = d}
-
 instance Collidable Bullet where
     --size :: Bullet ->  (Float,Float)
     size b = (Weapon.size b, Weapon.size b)
     --position :: Bullet -> (Float,Float)
     position b = pos b 
+shoot :: Gun -> Point -> Vector -> [Bullet]
+shoot (Simple c s _) p d = [Bullet { size = c, pos = p, speed = s, direction = d}]
