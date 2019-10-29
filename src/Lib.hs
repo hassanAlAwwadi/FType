@@ -3,6 +3,9 @@ module Lib
     ( someFunc
     ) where
 
+import System.IO (readFile)
+import Data.List (sortBy)
+import qualified Data.Ord as D (Down(..), comparing) 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 import System.Exit
@@ -19,13 +22,21 @@ data WorldState = Paused WorldState | Scrolling | BossFight deriving (Show)
 pause (Paused s) = s
 pause  s         = Paused s
 
-data GameState = Playing World WorldState | Menu Int
+data GameState = Playing World WorldState | Menu Int | HighScores (IO [(String, Float)])
 
 instance Paint GameState where
   paint (Menu x)  = pure $ pictures [mainMenu, translate 0 (fromIntegral $ x * (-250)) menuSelector]  where 
-    mainMenu = pictures [translate (-50) 250 $ color white $ Text "Level 1",
-                         translate (-50) 0 $ color white $ Text    "High scores"]
+    mainMenu =  translate (-50) 250 $ 
+                pictures [                      color white $ Text "Level 1",
+                           translate 0 (-250) $ color white $ Text "High scores"
+                         ]
     menuSelector = translate 350 300 $ color yellow $ rectangleWire 800 200
+  paint (HighScores ioScores) = do
+    scores <- ioScores
+    let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
+    let translated = fmap (\(tr, te) -> translate 0  tr te) $ zip [0, (-200)..] nameandscores
+    let single = color white $ pictures translated
+    return single
   paint (Playing w (Paused s)) = do 
     pw <- paint w
     let pp = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
@@ -44,17 +55,24 @@ instance Handle GameState where
       _                                       -> Menu n
     handle e (Playing w s)   = do nw <- handle e w
                                   return $ Playing nw s
+    handle e p = return p
  
-menuAction 0 = Playing world Scrolling where 
-    world = World {
-        player = ship,
-        enemies = [Enemy { size = 10, pos = (10,10), speed =5, direction = (0,0), health = 10, gun = simple, bullets = [], timer = 0} ],
-        lives = 3,
-        score = 0,
-        level = 0,
-        timer = 0
-    } 
+menuAction 0 = Playing world Scrolling 
+menuAction 1 = 
+    let scores = do 
+            file <- readOrCreateFile  "HighScores.txt" 
+            let filelines = lines file
+            let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
+            return scores
+    in HighScores scores
 menuAction n = Menu n
+
+readOrCreateFile :: FilePath -> IO String
+readOrCreateFile p = do 
+    nothing <- appendFile p ""
+    readFile p 
+
+
   
 instance Tick GameState where
     tick f g@(Playing _ (Paused _)) = pure g
