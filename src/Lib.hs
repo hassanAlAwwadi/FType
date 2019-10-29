@@ -65,11 +65,3 @@ instance Tick GameState where
 
 
 
-checkCollision :: (Collidable a,Collidable b) => a -> b -> Bool
-checkCollision c1 c2= intersectX (C.size c1) (position c1) (C.size c2) (position c2) || intersectY (C.size c1) (position c1) (C.size c2) (position c2)
-  where intersectX    (xs1,_) (xp1,_) (xs2,_) (xp2,_) |xp2>xp1=xp2 - (xp1 + xs1 + xs2) <= 0 
-                                                      |xp2<xp1=xp1 - (xp2 + xs1 + xs2) <= 0
-                                                      |otherwise = True
-        intersectY    (_,ys1) (_,yp1) (_,ys2) (_,yp2) |yp2>yp1=yp2 - yp1 - ys1 - ys2 <= 0 
-                                                      |yp2<yp1=yp1 - (yp2 + ys1 + ys2) <= 0
-                                                      |otherwise = True

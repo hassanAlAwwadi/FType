@@ -4,6 +4,7 @@ import Classess
 import Graphics.Gloss
 import Ship(Ship)
 import Enemy(Enemy)
+
 data World = World 
   {
   player :: Ship, 
