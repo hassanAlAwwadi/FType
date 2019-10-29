@@ -23,5 +23,5 @@ instance Tick Bullet where
     
 bullet = Bullet { size = 10, pos = (10,10), speed = 10, direction = (2,2)}
 
-shoot :: Gun -> Point -> Vector -> Bullet
-shoot (Simple c s _) p d = Bullet { size = c, pos = p, speed = s, direction = d}
+shoot :: Gun -> Point -> Vector -> [Bullet]
+shoot (Simple c s _) p d = [Bullet { size = c, pos = p, speed = s, direction = d}]
