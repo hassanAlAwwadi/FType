@@ -2,8 +2,8 @@ module World where
 
 import Classess
 import Graphics.Gloss
-import Ship(Ship)
-import Enemy(Enemy)
+import Ship(Ship, ship)
+import Enemy(Enemy, enemy)
 data World = World 
   {
   player :: Ship, 
@@ -13,6 +13,15 @@ data World = World
   level :: Int,
   timer :: Float
   }
+
+world = World {
+    player = ship,
+    enemies = [enemy],
+    lives = 3,
+    score = 0,
+    level = 0,
+    timer = 0
+} 
 
 instance Paint World where
     paint w = do 
@@ -32,3 +41,4 @@ instance Tick World where
         e <- tick f $ enemies w
         let t = timer (w::World)
         pure w {player = p, enemies = e, timer = t + f}
+
