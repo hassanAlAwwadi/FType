@@ -1,6 +1,7 @@
 module Classess(Paint, paint,  
                 Handle, handle,
-                Tick, tick
+                Tick, tick,
+                Collidable, size , position
                 ) where
 
 import Graphics.Gloss
@@ -28,3 +29,6 @@ class Tick t where
 instance Tick h => Tick [h] where 
     tick f [] = return []
     tick f hs = mapM (tick f) hs
+class Collidable c where
+    size :: c -> (Float,Float)
+    position :: c -> Point
