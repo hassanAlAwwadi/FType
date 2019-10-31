@@ -14,7 +14,7 @@ data Gun = Simple { cal :: Float, speed :: Float, cooldown :: Float }
          | SpreadShot { amount :: Int, angle :: Int, cal :: Float, speed :: Float, cooldown :: Float } 
          | Laser { width :: Int, power :: Int , cooldown :: Float} 
 
-simple = Simple {cal = 20, speed = 1, cooldown = 0.5}
+simple = Simple {cal = 10, speed = 1, cooldown = 0.5}
 data Bullet = Bullet { size :: Float, pos :: Point, speed :: Float, direction :: Vector}
 
 instance Paint Bullet where

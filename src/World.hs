@@ -2,8 +2,9 @@ module World where
 
 import Classess
 import Graphics.Gloss
-import Ship(Ship, ship)
-import Enemy(Enemy, enemy, bullets)
+import Ship as S(Ship, ship, bullets)
+import Enemy as E(Enemy, enemy, bullets)
+import Weapon(Bullet)
 
 data World = World 
   {
@@ -47,11 +48,16 @@ instance Tick World where
         p <- tick f $ player w
         e <- tick f $ enemies w
         let t = timer (w::World)
-        pure w {player = if checkHit p e then p else ship,
-         enemies = e,
-         lives =  if checkHit p e then (lives w - 1) else lives w,
-         timer = t + f}
-        where checkHit p e  = checkHitPlayerEnemy p e  -- || checkHitPlayerBullet p (concatMap enemyBullets e)
+        if checkHit p e 
+            then pure world {lives = lives w -1} 
+            else pure w {player = if checkHit p e 
+                                    then ship 
+                                    else p,
+                                    enemies = filter (not . (checkHitCollidableBullet (S.bullets p))) e, 
+                                    timer = t + f}
+        where 
+              checkHit :: Ship -> [Enemy] -> Bool
+              checkHit p e  = checkHitPlayerEnemy p e  || checkHitCollidableBullet (concatMap E.bullets e) p 
               checkHitPlayerEnemy p e = or (map (checkCollision p) e) 
-              checkHitPlayerBullet p b = or (map (checkCollision p) b)
-              enemyBullets e = bullets e
+              checkHitCollidableBullet :: Collidable a => [Bullet] -> a -> Bool
+              checkHitCollidableBullet b c = or (map (checkCollision c) b)
