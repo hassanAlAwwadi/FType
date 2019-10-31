@@ -1,7 +1,7 @@
 module Classess(Paint, paint,  
                 Handle, handle,
                 Tick, tick,
-                Collidable, size , position,
+                Collidable, size , position, repos, reposChildren, reposWithChildren,
                 checkCollision
                 ) where
 
@@ -33,6 +33,11 @@ instance Tick h => Tick [h] where
 class Collidable c where
     size :: c -> (Float,Float)
     position :: c -> Point
+    repos :: Vector -> c -> c
+    reposChildren :: Vector -> c -> c
+
+reposWithChildren :: Collidable c => Vector -> c -> c
+reposWithChildren v = repos v . reposChildren v 
  
 checkCollision :: (Collidable a,Collidable b) => a -> b -> Bool
 checkCollision c1 c2= not (intersectX (size c1) (position c1) (size c2) (position c2) || intersectY (size c1) (position c1) (size c2) (position c2))

@@ -53,7 +53,11 @@ instance Tick Ship where
 
 instance Collidable Ship where
     --size :: Ship ->  (Float,Float)
-    size s = Ship.size s 
+    size = Ship.size
     --position :: Ship -> (Float,Float)
-    position s = pos s 
+    position = Ship.pos 
+    repos v s@Ship{pos = p} = s{pos = p L.+ v} 
+    reposChildren v s@Ship{bullets = b} = s{bullets = map (reposWithChildren v) b}
+
+
 
