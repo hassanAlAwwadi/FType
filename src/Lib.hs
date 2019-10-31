@@ -72,8 +72,6 @@ readOrCreateFile p = do
     nothing <- appendFile p ""
     readFile p 
 
-
-  
 instance Tick GameState where
     tick f g@(Playing _ (Paused _)) = pure g
     tick f (Playing w s@BossFight)            = do 

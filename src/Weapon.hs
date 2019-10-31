@@ -6,6 +6,10 @@ import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
 
+data PowerUp = PUp      -- Simple power up
+             | SUp      -- Spreadshot power up
+             | LUp      -- Laser power up
+
 data Gun = Simple { cal :: Float, speed :: Float, cooldown :: Float } 
          | SpreadShot { amount :: Int, angle :: Int, cal :: Float, speed :: Float, cooldown :: Float } 
          | Laser { width :: Int, power :: Int , cooldown :: Float} 

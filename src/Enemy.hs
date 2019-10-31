@@ -1,7 +1,7 @@
 module Enemy where
 
 import Classess as C 
-import Weapon(Gun, Bullet, simple, shoot, cooldown)
+import Weapon(Gun, Bullet, simple, shoot, cooldown, PowerUp)
 import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
@@ -9,6 +9,7 @@ import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 --import Weapon as W
 
 data Enemy = Enemy { size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet], timer :: Float } 
+           | DeadEnemy {size :: Float, pos :: Point, reward :: Maybe PowerUp}
 enemy = Enemy { Enemy.size = 10, pos = (10,10), speed =5, direction = (0,0), health = 10, gun = simple, bullets = [], timer = 0}
 
 instance Paint Enemy where
