@@ -24,6 +24,12 @@ world = World {
     timer = 0
 } 
 
+scroll :: Float -> World -> World
+scroll xdelta w@World {player = p, enemies = e} = 
+    w{ 
+        enemies = map (reposWithChildren (xdelta, 0)) e 
+    }
+
 instance Paint World where
     paint w = do 
         pw <- paint $ player w

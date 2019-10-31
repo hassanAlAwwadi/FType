@@ -27,6 +27,8 @@ instance Collidable Bullet where
     --size :: Bullet ->  (Float,Float)
     size b = (Weapon.size b, Weapon.size b)
     --position :: Bullet -> (Float,Float)
-    position b = pos b 
+    position = pos
+    repos v b@Bullet{pos = p} = b{pos = p L.+ v}
+    reposChildren v = id
 shoot :: Gun -> Point -> Vector -> [Bullet]
 shoot (Simple c s _) p d = [Bullet { size = c, pos = p, speed = s, direction = d}]

@@ -18,7 +18,7 @@ import World
 someFunc :: IO ()
 someFunc = playIO FullScreen black 30 (Menu 0) paint handle tick
 
-data WorldState = Paused WorldState | Scrolling | BossFight deriving (Show)
+data WorldState = Paused WorldState | Scrolling Float | BossFight deriving (Show)
 pause (Paused s) = s
 pause  s         = Paused s
 
@@ -36,7 +36,7 @@ instance Paint GameState where
     let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
     let translated = fmap (\(tr, te) -> translate 0  tr te) $ zip [0, (-200)..] nameandscores
     let single = color white $ pictures translated
-    return single
+    return $ translate (-900) 300 single
   paint (Playing w (Paused s)) = do 
     pw <- paint w
     let pp = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
@@ -57,7 +57,7 @@ instance Handle GameState where
                                   return $ Playing nw s
     handle e p = return p
  
-menuAction 0 = Playing world Scrolling 
+menuAction 0 = Playing world (Scrolling (-0.5))
 menuAction 1 = 
     let scores = do 
             file <- readOrCreateFile  "HighScores.txt" 
@@ -76,10 +76,12 @@ readOrCreateFile p = do
   
 instance Tick GameState where
     tick f g@(Playing _ (Paused _)) = pure g
-    tick f (Playing w s)            = do 
+    tick f (Playing w s@BossFight)            = do 
         nw <- tick f w
         return $ Playing nw s
+    tick f (Playing w (Scrolling h))            = do 
+        nw <-  tick f $ scroll h w
+        return $ Playing nw (Scrolling h)
     tick _ a                        = pure a 
-
 
 
