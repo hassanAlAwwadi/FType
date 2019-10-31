@@ -35,7 +35,7 @@ class Collidable c where
     position :: c -> Point
  
 checkCollision :: (Collidable a,Collidable b) => a -> b -> Bool
-checkCollision c1 c2= intersectX (size c1) (position c1) (size c2) (position c2) || intersectY (size c1) (position c1) (size c2) (position c2)
+checkCollision c1 c2= not (intersectX (size c1) (position c1) (size c2) (position c2) || intersectY (size c1) (position c1) (size c2) (position c2))
     where   intersectX    (xs1,_) (xp1,_) (xs2,_) (xp2,_) |xp2>xp1=xp2 - (xp1 + xs1/2 + xs2/2) > 0 
                                                           |xp2<xp1=xp1 - (xp2 + xs1/2 + xs2/2) > 0
                                                           |otherwise = False
