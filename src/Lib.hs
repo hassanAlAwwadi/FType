@@ -17,8 +17,8 @@ import System.Random
 
 someFunc :: IO ()
 someFunc = do 
-    playIO FullScreen black 30 (MainMenu mainMenu) paint handle tick
-    return ()
+    seed <- newStdGen 
+    playIO FullScreen black 30 MainMenu{ menu = mainMenu, rng = seed} paint handle tick
 
 data WorldState = Paused    { past ::WorldState } 
                 | Scrolling {scrollSpeed :: Float} 
@@ -27,24 +27,24 @@ data WorldState = Paused    { past ::WorldState }
 pause (Paused s) = s
 pause  s         = Paused s
 
-data GameState = Playing    { game :: World, state :: WorldState} 
-               | MainMenu   { menu ::Menu GameState} 
-               | HighScores { mvps :: IO [(String, Float)]}
+data GameState = Playing    { game :: World, state :: WorldState, rng :: StdGen} 
+               | MainMenu   { menu ::Menu GameState, rng :: StdGen} 
+               | HighScores { mvps :: IO [(String, Float)], rng ::StdGen}
 
 --smart constructor of menu is used to create the main menu
 mainMenu = createMenu [("Level 1", loadLevel1), ("HighScore", loadHighScore)]
 
 --level 1 is wip, ok? OK?
-loadLevel1 _ = Playing world (Scrolling (-0.5))
+loadLevel1 g = Playing{ game = world, state = Scrolling (-0.5), rng = rng g }
 
 --loading the highscores
-loadHighScore _ = 
+loadHighScore g = 
     let scores = do 
             file <- readOrCreateFile  "HighScores.txt" 
             let filelines = lines file
             let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
             return scores
-    in HighScores scores
+    in HighScores {mvps = scores, rng = rng g}
 
 --crashing the game is ugly so this makes sure that the game survives, even if the highscore file wasn't created
 readOrCreateFile :: FilePath -> IO String
