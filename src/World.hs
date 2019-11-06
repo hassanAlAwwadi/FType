@@ -14,7 +14,7 @@ data World = World
   score :: Int,
   level :: Int,
   timer :: Float
-  }
+}
 
 world = World {
     player = ship,
@@ -24,6 +24,15 @@ world = World {
     level = 0,
     timer = 0
 } 
+
+resetWorld world = world {
+    player = ship,
+    enemies = [enemy],
+    lives = 3,
+    score = 0,
+    level = 0,
+    timer = 0
+}
 
 scroll :: Float -> World -> World
 scroll xdelta w@World {player = p, enemies = e} = 
@@ -49,7 +58,7 @@ instance Tick World where
         e <- tick f $ enemies w
         let t = timer (w::World)
         if checkHit p e 
-            then pure world {lives = lives w -1} 
+            then pure (resetWorld w) {lives = lives w -1} 
             else pure w {player = if checkHit p e 
                                     then ship 
                                     else p,
@@ -57,7 +66,6 @@ instance Tick World where
                                     timer = t + f}
         where 
               checkHit :: Ship -> [Enemy] -> Bool
-              checkHit p e  = checkHitPlayerEnemy p e  || checkHitCollidableBullet (concatMap E.bullets e) p 
-              checkHitPlayerEnemy p e = or (map (checkCollision p) e) 
+              checkHit p e  = any (checkCollision p) e   || any (checkCollision p) (e >>= E.bullets) 
               checkHitCollidableBullet :: Collidable a => [Bullet] -> a -> Bool
-              checkHitCollidableBullet b c = or (map (checkCollision c) b)
+              checkHitCollidableBullet b c = any (checkCollision c) b
