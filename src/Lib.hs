@@ -13,11 +13,17 @@ import System.Exit
 import Classess as C
 import World
 import Menu
+import System.Random
 
 someFunc :: IO ()
-someFunc = playIO FullScreen black 30 (MainMenu mainMenu) paint handle tick
+someFunc = do 
+    playIO FullScreen black 30 (MainMenu mainMenu) paint handle tick
+    return ()
 
-data WorldState = Paused { past ::WorldState } | Scrolling {scrollSpeed :: Float} | BossFight deriving (Show)
+data WorldState = Paused    { past ::WorldState } 
+                | Scrolling {scrollSpeed :: Float} 
+                -- | for now there is still no way to get in or out of a bossfight
+                | BossFight {} deriving (Show)
 pause (Paused s) = s
 pause  s         = Paused s
 
@@ -48,37 +54,37 @@ readOrCreateFile p = do
 
 instance Paint GameState where
     --paint menu
-    paint MainMenu{menu = m}         = paint m
+    paint MainMenu{ menu = m }         = paint m
     --paint highscores
-    paint HighScores{mvps = ioNames} = do
+    paint HighScores{ mvps = ioNames } = do
         scores <- ioNames
         let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
         let translated = translate 0 <$> [0, (-200)..] <*> nameandscores
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
     --paint paused game
-    paint Playing{game = w, state = (Paused s)} = do 
+    paint Playing{ game = w, state = Paused s } = do 
         pw <- paint w
         let pauseScreen = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
         pure $ pictures [pw, pauseScreen]
     --paint game
-    paint Playing{game = w} = paint w
+    paint Playing{ game = w } = paint w
 
 
 
 instance Handle GameState where 
     -- the special keys. Exit game, pause game, menu action
     handle (EventKey (SpecialKey KeyEsc)   Down _ _) _               = exitSuccess 
-    handle (EventKey (Char 'p') Down _ _) Playing{game = w, state=s} = pure $ Playing w $ pause s
-    handle (EventKey (SpecialKey KeyEnter) Down _ _) g@(MainMenu m)  = pure $ menuAction m g 
+    handle (EventKey (Char 'p') Down _ _) g@Playing{ state = s } = pure $ g{ state = pause s }
+    handle (EventKey (SpecialKey KeyEnter) Down _ _) g@MainMenu{ menu = m }  = pure $ menuAction m g 
     -- moving the menu
-    handle e (MainMenu m)  = do 
+    handle e mm@MainMenu{ menu = m }  = do 
         nm <- handle e m
-        return $ MainMenu nm
+        return $ mm{ menu = nm}
     -- playing the game
-    handle e (Playing w s) = do 
+    handle e g@Playing{ game = w } = do 
         nw <- handle e w
-        return $ Playing nw s
+        return $ g{ game = nw }
     -- Bossfight WIP
     handle e p = return p
 
@@ -86,13 +92,13 @@ instance Tick GameState where
     -- tick doesn't do anything if the game is paused
     tick f g@Playing{state = Paused _} = pure g
     -- No scrolling screen during bossfight
-    tick f (Playing w s@BossFight)            = do 
+    tick f g@Playing{ game = w, state = BossFight}            = do 
         nw <- tick f w
-        return $ Playing nw s
+        return $ g{ game = nw }
     -- yes scrolling screen during non boss fights
-    tick f (Playing w (Scrolling h))            = do 
+    tick f g@Playing{ game = w, state = Scrolling h }            = do 
         nw <-  tick f $ scroll h w
-        return $ Playing nw (Scrolling h)
+        return $ g{ game = nw }
     -- safety net
     tick _ a                        = pure a 
 
