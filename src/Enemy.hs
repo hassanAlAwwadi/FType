@@ -1,4 +1,4 @@
-{-# LANGUAGE TupleSections, MultiWayIf #-}
+{-# LANGUAGE MultiWayIf #-}
 module Enemy where
 
 import qualified Classess as C 
@@ -48,9 +48,9 @@ instance C.Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
     tick f e@Enemy{ pos = p, speed = v, direction = d, gun = g, bullets = b} = do
         tb <- C.tick f b
-        ng <- C.tick f g
-        let (ng, nb) = shoot  p (-1, 0)  g
-        pure e { pos = p L.+ v L.* d, bullets = nb++b, gun = ng }
+        tg <- C.tick f g
+        let (sg, nb) = shoot  p (-1, 0)  tg
+        pure e { pos = p L.+ v L.* d, bullets = nb++tb, gun = sg }
     
 instance C.Collidable Enemy where
     --size :: Enemy ->  (Float,Float)

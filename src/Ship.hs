@@ -52,9 +52,9 @@ instance C.Tick Ship where
     tick f s@(Ship p v d g bs _ _)  = do 
         let np =  p L.+ v L.* d
         tb <- C.tick f bs
-        ng <- C.tick f g
-        let (ng', nb) = shoot np (1,0) g
-        return s {bullets = nb ++ bs, pos = np, gun = ng' }
+        tg <- C.tick f g
+        let (ng', nb) = shoot np (1,0) tg
+        return s {bullets = nb ++ tb, pos = np, gun = ng' }
 
 instance C.Collidable Ship where
     --size :: Ship ->  (Float,Float)
