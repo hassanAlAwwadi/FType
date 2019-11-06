@@ -1,25 +1,41 @@
+{-# LANGUAGE TupleSections, MultiWayIf #-}
 module Enemy where
 
 import qualified Classess as C 
-import Weapon(Gun, Bullet, simple, shoot, PowerUp)
+import Weapon(Gun, Bullet, simple, shoot, PowerUp(..))
 import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
+import System.Random
 
 
 --import Weapon as W
 
 data Enemy = Enemy{ size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet] } 
-           | GraveMarker {size :: Float, pos :: Point, reward :: Maybe PowerUp}
+           | GraveMarker { pos :: Point, reward :: Maybe PowerUp }
 
 enemy = Enemy{ 
     Enemy.size = 10, 
     pos = (10,10), 
-    speed =5, 
+    speed = 5, 
     direction = (0,0), 
     health = 10, 
     gun = simple, 
     bullets = []
     }
+
+damage :: Enemy -> Float -> StdGen -> (StdGen, Enemy)
+damage e@GraveMarker{} _ rng = (rng, e) 
+damage e@Enemy{health = h} amount rng 
+    | h > amount = (rng, e{health = h - amount})
+    | otherwise  = 
+        let (randomVal, nextRng) = randomR (0::Int, 100) rng
+            powerup =   if | randomVal <= 5  -> Just PUp
+                           | randomVal <= 10 -> Just SUp
+                           | randomVal <= 15 -> Just LUp
+                           | otherwise       -> Nothing
+        in (nextRng, GraveMarker{pos = pos e, reward = powerup})
+
+
 
 instance C.Paint Enemy where
     paint Enemy{ size = s, pos = (x,y), bullets = b } = do
