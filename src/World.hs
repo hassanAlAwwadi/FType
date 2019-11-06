@@ -65,7 +65,7 @@ instance Tick World where
             else pure w {player = if checkHit p e 
                                     then ship 
                                     else p,
-                                    enemies = filter (not . (checkHitCollidableBullet (S.bullets p))) e, 
+                                    enemies = filter (not . checkHitCollidableBullet (S.bullets p)) e, 
                                     timer = t + f}
         where 
               checkHit :: Ship -> [Enemy] -> Bool
