@@ -11,7 +11,7 @@ import System.Random
 --import Weapon as W
 
 data Enemy = Enemy{ size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet] } 
-           | GraveMarker { pos :: Point, reward :: Maybe PowerUp }
+           | GraveMarker { pos :: Point, reward :: Maybe PowerUp, bullets :: [Bullet] }
 
 enemy = Enemy{ 
     Enemy.size = 10, 
@@ -33,7 +33,7 @@ damage e@Enemy{health = h} amount rng
                            | randomVal <= 10 -> Just SUp
                            | randomVal <= 15 -> Just LUp
                            | otherwise       -> Nothing
-        in (nextRng, GraveMarker{pos = pos e, reward = powerup})
+        in (nextRng, GraveMarker{pos = pos e, reward = powerup, bullets = bullets e})
 
 
 
