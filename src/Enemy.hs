@@ -56,6 +56,6 @@ instance C.Collidable Enemy where
     --size :: Enemy ->  (Float,Float)
     size e = (Enemy.size e, Enemy.size e)
     --position :: Enemy -> (Float,Float)
-    position e = pos e
+    position = pos
     repos v e@Enemy{pos = p} = e{pos = p L.+ v} 
     reposChildren v e@Enemy{bullets = b} = e{bullets = map (C.reposWithChildren v) b}

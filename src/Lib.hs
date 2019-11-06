@@ -1,7 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields, InstanceSigs #-}
 module Lib
     ( someFunc
-      ,GameState
     ) where
 
 import System.IO (readFile)
