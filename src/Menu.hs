@@ -9,7 +9,7 @@ data Menu a = Menu { menuItems :: [(String, a)], maxSelected :: Int, selected ::
 instance Paint (Menu a) where
     paint Menu {selected = s, menuItems = items} = 
         let menuSelector = translate 400 (fromIntegral $ 50 + s * (-250)) $ color yellow $ rectangleWire 900 200
-            labels = translate 0 <$>  [0, (-250)..] <*> map (Text . fst) items
+            labels = uncurry (translate 0) <$> zip [0, (-250)..] (map (Text . fst) items)
         in  pure $ translate (-50) 250 $ Pictures (menuSelector : labels)
 
 instance Handle (Menu a) where

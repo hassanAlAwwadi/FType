@@ -60,7 +60,7 @@ instance Paint GameState where
     paint HighScores{ mvps = ioNames } = do
         scores <- ioNames
         let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
-        let translated = translate 0 <$> [0, (-200)..] <*> nameandscores
+        let translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
     --paint paused game
