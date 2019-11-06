@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module Weapon where
+module Weapon(PowerUp, Gun, Bullet, shoot, simple) where
 
 import Classess
 import Graphics.Gloss
@@ -10,11 +10,15 @@ data PowerUp = PUp      -- Simple power up
              | SUp      -- Spreadshot power up
              | LUp      -- Laser power up
 
-data Gun = Simple { cal :: Float, speed :: Float, cooldown :: Float } 
-         | SpreadShot { amount :: Int, angle :: Int, cal :: Float, speed :: Float, cooldown :: Float } 
-         | Laser { width :: Int, power :: Int , cooldown :: Float} 
+data Gun = Simple     { cal :: Float, speed :: Float, cooldown :: Float, countdown :: Float} 
+         | SpreadShot { cal :: Float, speed :: Float, cooldown :: Float, countdown :: Float, amount :: Int, angle :: Int } 
+         | Laser      { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, livespan :: Float} 
 
-simple = Simple {cal = 10, speed = 1, cooldown = 0.5}
+simple = Simple {cal = 10, speed = 1, cooldown = 0.5, countdown = 0.5}
+
+instance Tick Gun where
+    tick f g = pure $ g{countdown = countdown g - f}
+
 data Bullet = Bullet { size :: Float, pos :: Point, speed :: Float, direction :: Vector}
 
 instance Paint Bullet where
@@ -24,8 +28,6 @@ instance Paint Bullet where
 instance Tick Bullet where
     --tick :: Float -> Bullet -> IO Bullet
     tick f b@(Bullet _ p v d)  = pure $ (b { pos = p L.+ v L.* d})
-    
-bullet = Bullet { size = 1000, pos = (10,10), speed = 10, direction = (2,2)}
 
 instance Collidable Bullet where
     --size :: Bullet ->  (Float,Float)
@@ -34,5 +36,7 @@ instance Collidable Bullet where
     position = pos
     repos v b@Bullet{pos = p} = b{pos = p L.+ v}
     reposChildren v = id
-shoot :: Gun -> Point -> Vector -> [Bullet]
-shoot (Simple c s _) p d = [Bullet { size = c, pos = p, speed = s, direction = d}]
+shoot :: Point -> Vector -> Gun -> (Gun , [Bullet])
+shoot  p d g@Simple{cal = c, speed = s, countdown = count, cooldown = cool} 
+    | count <= 0 = (g{countdown = cool}, [Bullet { size = c, pos = p, speed = s, direction = d}])
+    | otherwise = (g, [])

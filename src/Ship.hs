@@ -1,34 +1,40 @@
 module Ship where
 
-import Classess as C
+import qualified Classess as C
 import Graphics.Gloss
-import Weapon(simple, Gun,Bullet, cooldown, shoot)
+import Weapon(simple, Gun,Bullet, shoot)
 import Graphics.Gloss.Interface.IO.Game
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
 
-data Ship = Ship 
-  {
-  pos :: Point, 
-  speed :: Float,
-  direction :: Vector,
-  gun :: Gun, 
-  bullets :: [Bullet],
-  bombs :: Int,
-  timer :: Float,
-  size :: (Float,Float)
-  }
+data Ship = Ship {
+    pos :: Point, 
+    speed :: Float,
+    direction :: Vector,
+    gun :: Gun, 
+    bullets :: [Bullet],
+    bombs :: Int,
+    size :: (Float,Float)
+    }
 
-ship = Ship ((-420),0) 5 (0,0) simple [] 0 0 (40,20) 
+ship = Ship{ 
+    pos = (-420,0), 
+    speed = 5, 
+    direction = (0,0), 
+    gun = simple, 
+    bullets = [], 
+    bombs = 0, 
+    size = (40,20)
+    } 
 
-instance Paint Ship where
-    paint (Ship (x,y) v (dx,dy) _ b _ _ (sx,sy)) = do 
-      pb <- paint b
-      let ps = translate x y shipDrawing 
-      pure $ pictures [ps,pb] where 
-      shipDrawing = color blue $ rectangleSolid sx sy 
+instance C.Paint Ship where
+    paint Ship{ pos = (x,y), speed = v, direction = (dx,dy), bullets = b, size = (sx,sy) } = do 
+        pb <- C.paint b
+        let ps = translate x y shipDrawing 
+        pure $ pictures [ps,pb] where 
+        shipDrawing = color blue $ rectangleSolid sx sy 
 
-instance Handle Ship where
+instance C.Handle Ship where
     --handle :: Event -> Ship -> IO Ship
     handle e s = pure $ case e of 
         EventKey (Char 'w') Down _ _ -> s { direction = ( fst $ direction s,  1 ) }
@@ -41,23 +47,22 @@ instance Handle Ship where
         EventKey (Char 'a') Up   _ _ -> s { direction = (  0, snd $ direction s ) }
         _                            -> s
 
-instance Tick Ship where
+instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@(Ship p v d g bs _ t _)  = do 
+    tick f s@(Ship p v d g bs _ _)  = do 
         let np =  p L.+ v L.* d
-        tb <- tick f bs
-        let (nb, nt) = if t + f > cooldown g
-            then (shoot g np (1,0) ++ tb, 0)
-            else (tb, t + f)
-        return s {bullets = nb, timer = nt, pos = np }
+        tb <- C.tick f bs
+        ng <- C.tick f g
+        let (ng', nb) = shoot np (1,0) g
+        return s {bullets = nb ++ bs, pos = np, gun = ng' }
 
-instance Collidable Ship where
+instance C.Collidable Ship where
     --size :: Ship ->  (Float,Float)
-    size = Ship.size
+    size = size
     --position :: Ship -> (Float,Float)
-    position = Ship.pos 
-    repos v s@Ship{pos = p} = s{pos = p L.+ v} 
-    reposChildren v s@Ship{bullets = b} = s{bullets = map (reposWithChildren v) b}
+    position = pos 
+    repos v s@Ship{ pos = p } = s{ pos = p L.+ v } 
+    reposChildren v s@Ship{ bullets = b } = s{ bullets = map (C.reposWithChildren v) b }
 
 
 
