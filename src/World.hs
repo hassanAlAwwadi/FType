@@ -1,10 +1,11 @@
-module World where
+module World(World, startWorld, resetWorld, scroll) where
 
 import Classess
 import Graphics.Gloss
 import Ship as S(Ship, ship, bullets)
 import Enemy as E(Enemy, enemy, bullets)
 import Weapon(Bullet)
+import System.Random
 
 data World = World 
   {
@@ -13,16 +14,18 @@ data World = World
   lives :: Int, 
   score :: Int,
   level :: Int,
-  timer :: Float
+  timer :: Float,
+  rng :: StdGen
 }
 
-world = World {
+startWorld seed = World {
     player = ship,
     enemies = [enemy],
     lives = 3,
     score = 0,
     level = 0,
-    timer = 0
+    timer = 0,
+    rng = seed
 } 
 
 resetWorld world = world {

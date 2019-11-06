@@ -5,6 +5,7 @@ module Lib
     ) where
 
 import System.IO (readFile)
+import Data.Maybe (fromMaybe)
 import Data.List (sortBy)
 import qualified Data.Ord as D (Down(..), comparing) 
 import Graphics.Gloss
@@ -16,9 +17,11 @@ import Menu
 import System.Random
 
 someFunc :: IO ()
-someFunc = do 
-    seed <- newStdGen 
-    playIO FullScreen black 30 MainMenu{ menu = mainMenu, rng = seed} paint handle tick
+someFunc = do
+    seed <- newStdGen
+    -- "smart" constructor of menu is used to create the main menu
+    let mainMenu = createMenu [("Level 1", loadLevel1 seed), ("HighScore", loadHighScore)]
+    playIO FullScreen black 30 MainMenu{ menu = mainMenu} paint handle tick
 
 data WorldState = Paused    { past ::WorldState } 
                 | Scrolling {scrollSpeed :: Float} 
@@ -27,24 +30,22 @@ data WorldState = Paused    { past ::WorldState }
 pause (Paused s) = s
 pause  s         = Paused s
 
-data GameState = Playing    { game :: World, state :: WorldState, rng :: StdGen} 
-               | MainMenu   { menu ::Menu GameState, rng :: StdGen} 
-               | HighScores { mvps :: IO [(String, Float)], rng ::StdGen}
+data GameState = Playing    { game :: World, state :: WorldState} 
+               | MainMenu   { menu ::Menu GameState} 
+               | HighScores { mvps :: IO [(String, Float)]}
 
---smart constructor of menu is used to create the main menu
-mainMenu = createMenu [("Level 1", loadLevel1), ("HighScore", loadHighScore)]
 
 --level 1 is wip, ok? OK?
-loadLevel1 g = Playing{ game = world, state = Scrolling (-0.5), rng = rng g }
+loadLevel1 seed = Playing{ game = startWorld seed, state = Scrolling (-0.5)}
 
 --loading the highscores
-loadHighScore g = 
+loadHighScore = 
     let scores = do 
             file <- readOrCreateFile  "HighScores.txt" 
             let filelines = lines file
             let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
             return scores
-    in HighScores {mvps = scores, rng = rng g}
+    in HighScores {mvps = scores}
 
 --crashing the game is ugly so this makes sure that the game survives, even if the highscore file wasn't created
 readOrCreateFile :: FilePath -> IO String
@@ -76,7 +77,8 @@ instance Handle GameState where
     -- the special keys. Exit game, pause game, menu action
     handle (EventKey (SpecialKey KeyEsc)   Down _ _) _               = exitSuccess 
     handle (EventKey (Char 'p') Down _ _) g@Playing{ state = s } = pure $ g{ state = pause s }
-    handle (EventKey (SpecialKey KeyEnter) Down _ _) g@MainMenu{ menu = m }  = pure $ menuAction m g 
+    -- if for some the mainmenu failst to activate, it will just stay in the menu
+    handle (EventKey (SpecialKey KeyEnter) Down _ _) mm@MainMenu{ menu = m }  = pure $ fromMaybe mm $ menuAction m 
     -- moving the menu
     handle e mm@MainMenu{ menu = m }  = do 
         nm <- handle e m
