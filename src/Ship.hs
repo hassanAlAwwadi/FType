@@ -1,4 +1,4 @@
-module Ship where
+module Ship(Ship, ship, bullets) where
 
 import qualified Classess as C
 import Graphics.Gloss
@@ -15,7 +15,7 @@ data Ship = Ship {
     bullets :: [Bullet],
     bombs :: Int,
     size :: (Float,Float)
-    }
+}
 
 ship :: Ship
 ship = Ship{ 
@@ -26,7 +26,7 @@ ship = Ship{
     bullets = [], 
     bombs = 0, 
     size = (40,20)
-    } 
+} 
 
 instance C.Paint Ship where
     paint Ship{ pos = (x,y), bullets = b, size = (sx,sy) } = do 
@@ -64,6 +64,3 @@ instance C.Collidable Ship where
     position = pos 
     repos v s@Ship{ pos = p } = s{ pos = p L.+ v } 
     reposChildren v s@Ship{ bullets = b } = s{ bullets = map (C.reposWithChildren v) b }
-
-
-

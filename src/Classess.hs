@@ -1,9 +1,10 @@
-module Classess(Paint, paint,  
-                Handle, handle,
-                Tick, tick,
-                Collidable, size , position, repos, reposChildren, reposWithChildren,
-                checkCollision
-                ) where
+module Classess(
+    Paint, paint,  
+    Handle, handle,
+    Tick, tick,
+    Collidable, size , position, repos, reposChildren, reposWithChildren,
+    checkCollision
+) where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game(Event)
@@ -16,6 +17,12 @@ instance Paint p => Paint [p] where
     paint ps = do 
         paintings <- mapM paint ps
         return $ pictures paintings
+        
+instance Paint p => Paint (IO p) where
+    paint iop = iop >>= paint
+
+instance Paint Picture where
+    paint = pure
 
 class Handle h where
     handle :: Event -> h -> IO h
@@ -30,6 +37,7 @@ class Tick t where
 instance Tick h => Tick [h] where 
     tick _ [] = return []
     tick f hs = mapM (tick f) hs
+
 class Collidable c where
     size :: c -> (Float,Float)
     position :: c -> Point

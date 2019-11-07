@@ -2,7 +2,7 @@
 module Enemy where
 
 import qualified Classess as C 
-import Weapon(Gun, Bullet, simple, shoot, PowerUp(..))
+import Weapon(Gun, Bullet, PowerUp, simple, shoot, randomPowerUp)
 import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 import System.Random
@@ -11,7 +11,7 @@ import System.Random
 --import Weapon as W
 
 data Enemy = Enemy{ size :: Float, pos :: Point, speed :: Float, direction :: Vector, health :: Float,   gun :: Gun, bullets :: [Bullet] } 
-           | GraveMarker { pos :: Point, reward :: Maybe PowerUp, bullets :: [Bullet] }
+           | GraveMarker { pos :: Point, bullets :: [Bullet] }
 
 enemy :: Enemy
 enemy = Enemy{ 
@@ -22,21 +22,20 @@ enemy = Enemy{
     health = 10, 
     gun = simple, 
     bullets = []
-    }
+}
 
-damage :: Enemy -> Float -> StdGen -> (StdGen, Enemy)
-damage e@GraveMarker{} _ rng = (rng, e) 
-damage e@Enemy{health = h} amount rng 
-    | h > amount = (rng, e{health = h - amount})
+damage :: Enemy -> Float -> StdGen -> (StdGen, (Enemy, Maybe PowerUp))
+damage e@GraveMarker{} _ rng = (rng, (e, Nothing)) 
+damage e@Enemy{health = h, pos = p} amount rng 
+    | h > amount = (rng, (e{health = h - amount}, Nothing))
     | otherwise  = 
         let (randomVal, nextRng) = randomR (0::Int, 100) rng
-            powerup =   if | randomVal <= 5  -> Just PUp
-                           | randomVal <= 10 -> Just SUp
-                           | randomVal <= 15 -> Just LUp
-                           | otherwise       -> Nothing
-        in (nextRng, GraveMarker{pos = pos e, reward = powerup, bullets = bullets e})
+            powerup = randomPowerUp randomVal
+        in (nextRng, (GraveMarker{pos = pos e, bullets = bullets e}, powerup p))
 
-
+deadly :: Enemy -> Bool
+deadly Enemy{} = True
+deadly _ = False
 
 instance C.Paint Enemy where
     paint Enemy{ size = s, pos = (x,y), bullets = b } = do
@@ -44,8 +43,7 @@ instance C.Paint Enemy where
          let pe = translate x y enemyDrawing 
          pure $ pictures [pe,pb] where 
          enemyDrawing = color red $ rectangleSolid s s 
-    paint GraveMarker{pos = p, reward = Just r} = uncurry translate p <$> C.paint r 
-    paint _ = pure blank
+    paint GraveMarker{bullets = b} = C.paint b
 
 instance C.Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
@@ -54,11 +52,14 @@ instance C.Tick Enemy where
         tg <- C.tick f g
         let (sg, nb) = shoot  p (-1, 0)  tg
         pure e { pos = p L.+ v L.* d, bullets = nb++tb, gun = sg }
-    tick _ e = pure e
+    tick f g@GraveMarker{bullets = b} = do
+        nb <- C.tick f b
+        return g{bullets = nb}
     
 instance C.Collidable Enemy where
     --size :: Enemy ->  (Float,Float)
-    size e = (Enemy.size e, Enemy.size e)
+    size GraveMarker{} = (0,0)
+    size Enemy{size = s} = (s, s)
     --position :: Enemy -> (Float,Float)
     position = pos
     repos v e = e{pos = pos e L.+ v} 

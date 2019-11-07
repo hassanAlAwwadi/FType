@@ -1,37 +1,41 @@
+{-# LANGUAGE TypeApplications#-}
 module World(World, startWorld, resetWorld, scroll) where
 
 import Classess
 import Graphics.Gloss
-import Ship as S(Ship, ship, bullets)
-import Enemy as E(Enemy, enemy, bullets)
-import Weapon(Bullet)
+import qualified Ship as S(Ship, ship, bullets)
+import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly)
+import Weapon(Bullet, PowerUp, dmg)
 import System.Random
+import Control.Arrow(second)
 
 data World = World {
-    player :: Ship, 
-    enemies :: [Enemy],
+    player :: S.Ship, 
+    enemies :: [E.Enemy],
     lives :: Int, 
     score :: Int,
     level :: Int,
     timer :: Float,
+    powerUps :: [PowerUp],
     rng :: StdGen
 }
 
 startWorld :: StdGen -> World
 startWorld seed = World {
-    player = ship,
-    enemies = [enemy],
+    player = S.ship,
+    enemies = [E.enemy],
     lives = 3,
     score = 0,
     level = 0,
     timer = 0,
+    powerUps = [],
     rng = seed
 } 
 
 resetWorld :: World -> World
 resetWorld world = world {
-    player = ship,
-    enemies = [enemy],
+    player = S.ship,
+    enemies = [E.enemy],
     lives = 3,
     score = 0,
     level = 0,
@@ -42,11 +46,14 @@ scroll :: Float -> World -> World
 scroll xdelta w@World { enemies = e } = w{ enemies = map (reposWithChildren (xdelta, 0)) e }
 
 instance Paint World where
-    paint w = do 
-        pw <- paint $ player w
-        pe <- paint $ enemies w
-        let pt = translate 0 400 . color white . text . show . floor $ timer (w::World)  
-        return $ pictures [pw, pt, pe]
+    paint World{player = p, enemies = es, powerUps = pus, timer = t} = do 
+        pw <- paint p
+        pe <- paint es
+        pu <- paint pus
+        --type app used to prevent defaulting of show
+        let pt = translate 0 400 . color white . text . show @ Integer $ floor t 
+        return $ pictures [pw, pt, pu, pe]
+
 
 instance Handle World where
     handle e w = do 
@@ -56,17 +63,26 @@ instance Handle World where
 instance Tick World where 
     tick f w = do 
         p <- tick f $ player w
-        e <- tick f $ enemies w
+        (rng', ne, np) <- damageAllEnemies (rng w) (S.bullets p) <$> tick f (enemies w)
         let t = timer (w::World) + f
-        if checkHit p e 
-            then pure (resetWorld w) {lives = lives w -1} 
-            else pure w {player = if checkHit p e 
-                                    then ship 
-                                    else p,
-                                    enemies = filter (not . checkHitCollidableBullet (S.bullets p)) e, 
-                                    timer = t }
-        where 
-              checkHit :: Ship -> [Enemy] -> Bool
-              checkHit p e  = any (checkCollision p) e   || any (checkCollision p) (e >>= E.bullets) 
-              checkHitCollidableBullet :: Collidable a => [Bullet] -> a -> Bool
-              checkHitCollidableBullet b c = any (checkCollision c) b
+        let nw =if  any (\e -> E.deadly e && checkCollision p e) ne || any (checkCollision p) (ne >>= E.bullets)
+                then (resetWorld w) {lives = lives w -1} 
+                else w {
+                    player = p,
+                    enemies = ne,
+                    timer = t,
+                    powerUps = np ++ powerUps w,
+                    rng = rng'
+                }
+        return nw
+        
+damageAllEnemies :: StdGen -> [Bullet] -> [E.Enemy] -> (StdGen, [E.Enemy], [PowerUp])
+damageAllEnemies seed bs es = 
+    let 
+        enemyHitBy :: [(E.Enemy,[Bullet])]
+        enemyHitBy  = map (\e -> (e, filter (checkCollision e) bs)) es
+        enemyDamage :: [(E.Enemy, Float)]
+        enemyDamage = map (second sum . second (map dmg)) enemyHitBy
+        go :: (E.Enemy, Float) -> (StdGen, [E.Enemy], [PowerUp]) -> (StdGen, [E.Enemy], [PowerUp])
+        go (e, float) (gen, eacc, pacc) = let (gen', (en, pu)) = E.damage e float gen in (gen', en:eacc, maybe pacc (:pacc) pu)
+    in  foldr go (seed, [], []) enemyDamage 
