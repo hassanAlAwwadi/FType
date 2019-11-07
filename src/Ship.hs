@@ -1,8 +1,8 @@
-module Ship(Ship, ship, bullets) where
+module Ship(Ship, ship, bullets, Ship.powerUp) where
 
 import qualified Classess as C
 import Graphics.Gloss
-import Weapon(simple, Gun,Bullet, shoot)
+import Weapon as W(Gun,Bullet, PowerUp, simple, shoot, powerUp) 
 import Graphics.Gloss.Interface.IO.Game
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
@@ -27,6 +27,9 @@ ship = Ship{
     bombs = 0, 
     size = (40,20)
 } 
+
+powerUp :: Ship -> PowerUp -> Ship
+powerUp s p = s{ gun = W.powerUp (gun s) p}
 
 instance C.Paint Ship where
     paint Ship{ pos = (x,y), bullets = b, size = (sx,sy) } = do 

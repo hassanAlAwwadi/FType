@@ -1,13 +1,16 @@
 {-# LANGUAGE TypeApplications#-}
 module World(World, startWorld, resetWorld, scroll) where
 
-import Classess
-import Graphics.Gloss
-import qualified Ship as S(Ship, ship, bullets)
-import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly)
-import Weapon(Bullet, PowerUp, dmg)
+
+import Data.List(partition)
 import System.Random
 import Control.Arrow(second)
+
+import Classess
+import Graphics.Gloss
+import qualified Ship as S(Ship, ship, bullets, powerUp)
+import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly)
+import Weapon(Bullet, PowerUp, dmg)
 
 data World = World {
     player :: S.Ship, 
@@ -17,11 +20,13 @@ data World = World {
     level :: Int,
     timer :: Float,
     powerUps :: [PowerUp],
+    totalScore :: Int,
     rng :: StdGen
 }
 
 startWorld :: StdGen -> World
 startWorld seed = World {
+    totalScore = 0,
     player = S.ship,
     enemies = [E.enemy],
     lives = 3,
@@ -62,19 +67,33 @@ instance Handle World where
 
 instance Tick World where 
     tick f w = do 
+        -- simple ticks
         p <- tick f $ player w
-        (rng', ne, np) <- damageAllEnemies (rng w) (S.bullets p) <$> tick f (enemies w)
+        e <- tick f $ enemies w
         let t = timer (w::World) + f
-        let nw =if  any (\e -> E.deadly e && checkCollision p e) ne || any (checkCollision p) (ne >>= E.bullets)
-                then (resetWorld w) {lives = lives w -1} 
-                else w {
-                    player = p,
-                    enemies = ne,
+
+        -- damage enemies after the tick event
+        let (nextRNG, e', newups) = damageAllEnemies (rng w) (S.bullets p) e
+        let ups = newups ++ powerUps w
+
+        -- upgrade the player with powerups
+        let (touchedUps, freeUps) = partition (checkCollision p) ups
+        let upgradedP = foldr (flip S.powerUp) p touchedUps
+
+        -- reset world if player is hit
+        -- update it otherwise
+        let nw = if  playerhit p e
+                 then (resetWorld w) {lives = lives w -1, totalScore = totalScore w + floor t} 
+                 else w {
+                    player = upgradedP,
+                    enemies = e',
                     timer = t,
-                    powerUps = np ++ powerUps w,
-                    rng = rng'
-                }
-        return nw
+                    powerUps = freeUps,
+                    rng = nextRNG
+                 }
+                 
+        return nw where
+            playerhit p es = any (\e -> E.deadly e && checkCollision p e) es || any (checkCollision p) (es >>= E.bullets)
         
 damageAllEnemies :: StdGen -> [Bullet] -> [E.Enemy] -> (StdGen, [E.Enemy], [PowerUp])
 damageAllEnemies seed bs es = 
