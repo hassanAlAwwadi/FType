@@ -1,4 +1,4 @@
 ghcid "--command=stack ghci"
-:set -fwarn-unused-binds -fwarn-unused-imports
+:set -Wall
 :set -isrc
 :load Main

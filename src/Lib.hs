@@ -26,30 +26,33 @@ data WorldState = Paused    { past ::WorldState }
                 | Scrolling {scrollSpeed :: Float} 
                 -- | for now there is still no way to get in or out of a bossfight
                 | BossFight {} deriving (Show)
+
+pause :: WorldState -> WorldState
 pause (Paused s) = s
 pause  s         = Paused s
 
-data GameState = Playing    { game :: World, state :: WorldState} 
+data GameState = Playing    { world :: World, state :: WorldState} 
                | MainMenu   { menu ::Menu GameState} 
                | HighScores { mvps :: IO [(String, Float)]}
 
 
 --level 1 is wip, ok? OK?
-loadLevel1 seed = Playing{ game = startWorld seed, state = Scrolling (-0.5)}
+loadLevel1 :: StdGen -> GameState
+loadLevel1 seed = Playing{ world = startWorld seed, state = Scrolling (-0.5)}
 
 --loading the highscores
+loadHighScore :: GameState
 loadHighScore = 
     let scores = do 
             file <- readOrCreateFile  "HighScores.txt" 
             let filelines = lines file
-            let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
-            return scores
-    in HighScores {mvps = scores}
+            pure $ sortBy (D.comparing $ D.Down . snd) $ map read filelines
+    in HighScores { mvps = scores }
 
 --crashing the game is ugly so this makes sure that the game survives, even if the highscore file wasn't created
 readOrCreateFile :: FilePath -> IO String
 readOrCreateFile p = do 
-    nothing <- appendFile p ""
+    appendFile p ""
     readFile p 
 
 instance Paint GameState where
@@ -63,12 +66,12 @@ instance Paint GameState where
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
     --paint paused game
-    paint Playing{ game = w, state = Paused s } = do 
+    paint Playing{ world = w, state = Paused s } = do 
         pw <- paint w
         let pauseScreen = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
         pure $ pictures [pw, pauseScreen]
     --paint game
-    paint Playing{ game = w } = paint w
+    paint Playing{ world = w } = paint w
 
 
 
@@ -83,23 +86,23 @@ instance Handle GameState where
         nm <- handle e m
         return $ mm{ menu = nm}
     -- playing the game
-    handle e g@Playing{ game = w } = do 
+    handle e g@Playing{ world = w } = do 
         nw <- handle e w
-        return $ g{ game = nw }
+        return $ g{ world = nw }
     -- Bossfight WIP
-    handle e p = return p
+    handle _ p = pure p
 
 instance Tick GameState where
     -- tick doesn't do anything if the game is paused
-    tick f g@Playing{state = Paused _} = pure g
+    tick _ g@Playing{state = Paused _} = pure g
     -- No scrolling screen during bossfight
-    tick f g@Playing{ game = w, state = BossFight}            = do 
+    tick f g@Playing{ world = w, state = BossFight}            = do 
         nw <- tick f w
-        return $ g{ game = nw }
+        return $ g{ world = nw }
     -- yes scrolling screen during non boss fights
-    tick f g@Playing{ game = w, state = Scrolling h }            = do 
+    tick f g@Playing{ world = w, state = Scrolling h }            = do 
         nw <-  tick f $ scroll h w
-        return $ g{ game = nw }
+        return $ g{ world = nw }
     -- safety net
     tick _ a                        = pure a 
 

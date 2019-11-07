@@ -28,7 +28,7 @@ class Tick t where
     tick :: Float -> t -> IO t
 
 instance Tick h => Tick [h] where 
-    tick f [] = return []
+    tick _ [] = return []
     tick f hs = mapM (tick f) hs
 class Collidable c where
     size :: c -> (Float,Float)

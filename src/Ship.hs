@@ -17,6 +17,7 @@ data Ship = Ship {
     size :: (Float,Float)
     }
 
+ship :: Ship
 ship = Ship{ 
     pos = (-420,0), 
     speed = 5, 
@@ -28,7 +29,7 @@ ship = Ship{
     } 
 
 instance C.Paint Ship where
-    paint Ship{ pos = (x,y), speed = v, direction = (dx,dy), bullets = b, size = (sx,sy) } = do 
+    paint Ship{ pos = (x,y), bullets = b, size = (sx,sy) } = do 
         pb <- C.paint b
         let ps = translate x y shipDrawing 
         pure $ pictures [ps,pb] where 

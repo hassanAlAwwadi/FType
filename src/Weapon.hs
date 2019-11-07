@@ -27,7 +27,7 @@ instance Paint Bullet where
 
 instance Tick Bullet where
     --tick :: Float -> Bullet -> IO Bullet
-    tick f b@(Bullet _ p v d)  = pure b{ pos = p L.+ v L.* d}
+    tick _ b@(Bullet _ p v d)  = pure b{ pos = p L.+ v L.* d}
 
 instance Collidable Bullet where
     --size :: Bullet ->  (Float,Float)
@@ -35,7 +35,7 @@ instance Collidable Bullet where
     --position :: Bullet -> (Float,Float)
     position = pos
     repos v b@Bullet{pos = p} = b{pos = p L.+ v}
-    reposChildren v = id
+    reposChildren _ = id
 
 -- | the only exported way to produce a bullet
 shoot :: Point -> Vector -> Gun -> (Gun , [Bullet])

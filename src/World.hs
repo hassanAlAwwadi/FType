@@ -7,17 +7,17 @@ import Enemy as E(Enemy, enemy, bullets)
 import Weapon(Bullet)
 import System.Random
 
-data World = World 
-  {
-  player :: Ship, 
-  enemies :: [Enemy],
-  lives :: Int, 
-  score :: Int,
-  level :: Int,
-  timer :: Float,
-  rng :: StdGen
+data World = World {
+    player :: Ship, 
+    enemies :: [Enemy],
+    lives :: Int, 
+    score :: Int,
+    level :: Int,
+    timer :: Float,
+    rng :: StdGen
 }
 
+startWorld :: StdGen -> World
 startWorld seed = World {
     player = ship,
     enemies = [enemy],
@@ -28,6 +28,7 @@ startWorld seed = World {
     rng = seed
 } 
 
+resetWorld :: World -> World
 resetWorld world = world {
     player = ship,
     enemies = [enemy],
@@ -38,10 +39,7 @@ resetWorld world = world {
 }
 
 scroll :: Float -> World -> World
-scroll xdelta w@World {player = p, enemies = e} = 
-    w{ 
-        enemies = map (reposWithChildren (xdelta, 0)) e 
-    }
+scroll xdelta w@World { enemies = e } = w{ enemies = map (reposWithChildren (xdelta, 0)) e }
 
 instance Paint World where
     paint w = do 
@@ -59,14 +57,14 @@ instance Tick World where
     tick f w = do 
         p <- tick f $ player w
         e <- tick f $ enemies w
-        let t = timer (w::World)
+        let t = timer (w::World) + f
         if checkHit p e 
             then pure (resetWorld w) {lives = lives w -1} 
             else pure w {player = if checkHit p e 
                                     then ship 
                                     else p,
                                     enemies = filter (not . checkHitCollidableBullet (S.bullets p)) e, 
-                                    timer = t + f}
+                                    timer = t }
         where 
               checkHit :: Ship -> [Enemy] -> Bool
               checkHit p e  = any (checkCollision p) e   || any (checkCollision p) (e >>= E.bullets) 
