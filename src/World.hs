@@ -8,6 +8,7 @@ import Control.Arrow(second)
 
 import Classess
 import Graphics.Gloss
+import Graphics.Gloss.Data.Vector
 import qualified Ship as S(Ship, ship, bullets, powerUp,pos)
 import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly,direction,pos)
 import Weapon(Bullet, PowerUp, dmg)
@@ -109,6 +110,8 @@ damageAllEnemies seed bs es =
     in  foldr go (seed, [], []) enemyDamage 
 
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
-replaceDirection e s = map  shipDirection e
-                    where shipDirection e' = e' {E.direction = calcVector (E.pos e') (S.pos s) }
-                          calcVector (x1,y1) (x2,y2) =(x2-x1,y2-y1)
+replaceDirection e s = map shipDirection e
+                    where shipDirection e' = e' {E.direction = normalizeV (calcVector (E.pos e') (S.pos s)) }
+                          calcVector :: Vector -> Vector -> Vector
+                          calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
+                         
