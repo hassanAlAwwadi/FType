@@ -10,7 +10,7 @@ import Classess
 import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
 import qualified Ship as S(Ship, ship, bullets, powerUp,pos)
-import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly,direction,pos)
+import qualified Enemy as E (Enemy,Enemy(GraveMarker), enemy, bullets, damage, deadly,direction,pos)
 import Weapon(Bullet, PowerUp, dmg)
 
 data World = World {
@@ -111,7 +111,8 @@ damageAllEnemies seed bs es =
 
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
 replaceDirection e s = map shipDirection e
-                    where shipDirection e' = e' {E.direction = forward (normalizeV (calcVector (E.pos e') (S.pos s))) }
+                    where shipDirection e'@(E.GraveMarker _ _) =e'
+                          shipDirection e' = e' {E.direction = forward (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
                           forward (x,y) = (- (abs x),y)
