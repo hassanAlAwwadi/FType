@@ -15,7 +15,7 @@ data Enemy = Enemy{ size :: Float, pos :: Point, speed :: Float, direction :: Ve
 
 enemy :: Enemy
 enemy = Enemy{ 
-    Enemy.size = 10, 
+    Enemy.size = 20, 
     pos = (10,10), 
     speed = 5, 
     direction = (0,0), 

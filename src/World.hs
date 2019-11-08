@@ -111,7 +111,7 @@ damageAllEnemies seed bs es =
 
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
 replaceDirection e s = map shipDirection e
-                    where shipDirection e' = e' {E.direction = normalizeV (calcVector (E.pos e') (S.pos s)) }
+                    where shipDirection e' = e' {E.direction = forward (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
-                         
+                          forward (x,y) = (- (abs x),y)

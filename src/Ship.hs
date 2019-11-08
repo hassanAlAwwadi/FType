@@ -20,7 +20,7 @@ data Ship = Ship {
 ship :: Ship
 ship = Ship{ 
     pos = (-420,0), 
-    speed = 5, 
+    speed = 13, 
     direction = (0,0), 
     gun = simple, 
     bullets = [], 
