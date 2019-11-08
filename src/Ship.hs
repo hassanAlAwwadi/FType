@@ -1,4 +1,4 @@
-module Ship(Ship, ship, bullets, Ship.powerUp) where
+module Ship(Ship, ship, bullets, Ship.powerUp, pos) where
 
 import qualified Classess as C
 import Graphics.Gloss

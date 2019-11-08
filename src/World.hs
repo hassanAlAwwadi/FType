@@ -8,8 +8,8 @@ import Control.Arrow(second)
 
 import Classess
 import Graphics.Gloss
-import qualified Ship as S(Ship, ship, bullets, powerUp)
-import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly)
+import qualified Ship as S(Ship, ship, bullets, powerUp,pos)
+import qualified Enemy as E (Enemy, enemy, bullets, damage, deadly,direction,pos)
 import Weapon(Bullet, PowerUp, dmg)
 
 data World = World {
@@ -80,13 +80,15 @@ instance Tick World where
         let (touchedUps, freeUps) = partition (checkCollision p) ups
         let upgradedP = foldr (flip S.powerUp) p touchedUps
 
+        -- let enemies move to player
+        let eToP =  replaceDirection e' upgradedP
         -- reset world if player is hit
         -- update it otherwise
         let nw = if  playerhit p e
                  then (resetWorld w) {lives = lives w -1, totalScore = totalScore w + floor t} 
                  else w {
                     player = upgradedP,
-                    enemies = e',
+                    enemies = eToP,
                     timer = t,
                     powerUps = freeUps,
                     rng = nextRNG
@@ -105,3 +107,8 @@ damageAllEnemies seed bs es =
         go :: (E.Enemy, Float) -> (StdGen, [E.Enemy], [PowerUp]) -> (StdGen, [E.Enemy], [PowerUp])
         go (e, float) (gen, eacc, pacc) = let (gen', (en, pu)) = E.damage e float gen in (gen', en:eacc, maybe pacc (:pacc) pu)
     in  foldr go (seed, [], []) enemyDamage 
+
+replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
+replaceDirection e s = map  shipDirection e
+                    where shipDirection e' = e' {E.direction = calcVector (E.pos e') (S.pos s) }
+                          calcVector (x1,y1) (x2,y2) =(x2-x1,y2-y1)
