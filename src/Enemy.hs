@@ -50,7 +50,7 @@ instance C.Tick Enemy where
     tick f e@Enemy{ pos = p, speed = v, direction = d, gun = g, bullets = b} = do
         tb <- C.tick f b
         tg <- C.tick f g
-        let (sg, nb) = shoot  p (-1, 0)  tg
+        let (sg, nb) = shoot  p d  tg
         pure e { pos = p L.+ v L.* d, bullets = nb++tb, gun = sg }
     tick f g@GraveMarker{bullets = b} = do
         nb <- C.tick f b
