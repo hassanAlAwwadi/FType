@@ -86,7 +86,7 @@ instance Tick World where
         (touchedUps, freeUps) = partition (checkCollision p) ups
         upgradedP = foldr (flip S.powerUp) p touchedUps
 
-        e'' | (round t) `mod` 5 == 0 && (round (timer (w::World))) `mod` 5 /= 0= spawnEnemy (staticResource w) (dynamicResource w) e' 
+        e'' | round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0= spawnEnemy (staticResource w) (dynamicResource w) e' 
             | otherwise = e'
         -- let enemies move to player
         eToP =  replaceDirection e'' upgradedP
@@ -125,11 +125,13 @@ replaceDirection e s = map shipDirection e
                           forward (x,y) = (- (abs x),y)
 
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
-spawnEnemy stat dyn e = e3:e2:newEnemy:e
+spawnEnemy stat dyn e = e5:e4:e3:e2:e1:e
             where template = create stat dyn
-                  newEnemy = template {E.pos = (1000,10) }
-                  e2 = template {E.pos = (1000,-500) }
-                  e3 = template {E.pos = (1000,500) }
+                  e1 = template {E.pos = (1000,0) }
+                  e2 = template {E.pos = (1000,-400) }
+                  e3 = template {E.pos = (1500,400) }
+                  e4 = template {E.pos = (1500,700) }
+                  e5 = template {E.pos = (1000,-700) }
 
 data WorldState = Paused    { past :: WorldState } 
                 | Scrolling { scrollSpeed :: Float } 

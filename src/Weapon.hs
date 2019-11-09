@@ -16,8 +16,8 @@ instance Tick Gun where
 
 -- | the "level 1" specs of the three weapon types
 simple, spreadShot :: Gun
-simple     = Simple     {cal = 10, power = 1, speed = 5, cooldown = 0.5, countdown = 0.5 }
-spreadShot = SpreadShot {cal = 10, power = 1, speed = 5, cooldown = 1  , countdown = 1  , amount = 3, angle = 15 }
+simple     = Simple     {cal = 10, power = 1, speed = 8, cooldown = 0.5, countdown = 0.5 }
+spreadShot = SpreadShot {cal = 10, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 3, angle = 15 }
 
 
 data Bullet = Bullet    { size :: Float , pos :: Point, speed :: Float, direction :: Vector, dmg :: Float } deriving(Show, Read)
