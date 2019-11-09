@@ -2,7 +2,7 @@ module Classess(
     Paint, paint, PaintIO, paintIO,
     Handle, handle, HandleIO, handleIO,
     Tick, tick, TickIO, tickIO,
-    Collidable, size , position, repos, reposChildren, reposWithChildren, checkCollision, outOfBorder, pastBorders,
+    Collidable, size , position, repos, reposChildren, reposWithChildren, checkCollision, outOfBorder, pastBorder,
     Creatable, create
 ) where
 
@@ -67,8 +67,8 @@ outOfBorder b a = let
     in (x < xmin b || x > xmax b || y < ymin b || y > ymax b)
 
 
-pastBorders :: Collidable a => Border -> a -> Bool
-pastBorders b a = let
+pastBorder :: Collidable a => Border -> a -> Bool
+pastBorder b a = let
     (x,_) = position a
     in (x < xmin b)
 

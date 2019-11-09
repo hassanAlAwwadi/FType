@@ -79,7 +79,7 @@ instance Tick World where
         t = timer (w::World) + f
 
         -- remove enemies that have gone out of the border range
-        e' =  filter (not . outOfBorder (border $ staticResource w)) e
+        e' =  filter (not . pastBorder (border $ staticResource w)) e
         -- damage enemies after the tick event
         (nextRNG, e'', newups) = damageAllEnemies (rng $ dynamicResource w) (S.bullets p) e'
         ups = newups ++ powerUps w
