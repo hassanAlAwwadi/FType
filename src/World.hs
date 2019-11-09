@@ -86,7 +86,7 @@ instance Tick World where
         (touchedUps, freeUps) = partition (checkCollision p) ups
         upgradedP = foldr (flip S.powerUp) p touchedUps
 
-        e'' | (round t) `mod` 2 == 0 = spawnEnemy (staticResource w) (dynamicResource w) e' 
+        e'' | (round t) `mod` 5 == 0 && (round (timer (w::World))) `mod` 5 /= 0= spawnEnemy (staticResource w) (dynamicResource w) e' 
             | otherwise = e'
         -- let enemies move to player
         eToP =  replaceDirection e'' upgradedP
