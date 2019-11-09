@@ -7,7 +7,7 @@ import Data.List as S(sortBy)
 import qualified Data.Ord as D (Down(..), comparing) 
 
 import Classess as C
-import World(World, WorldState(..), pause, scroll)
+import World(World, lives, WorldState(..), pause, scroll)
 import Menu(Menu, createMenu, menuAction)
 
 import Graphics.Gloss.Interface.IO.Game
@@ -67,7 +67,8 @@ instance HandleIO Game where
     -- moving the menu
     handleIO e mm@MainMenu{ menu = m }  = return $ mm{ menu = handle e m}
     -- playing the game
-    handleIO e g@Playing{ world = w } = return $ g{ world = handle e w }
+    handleIO e g@Playing{ world = w } | lives w == 0 =  handleIO e MainMenu {menu =createMenu [("play game", Playing w {lives = 3} $ Scrolling (-0.5)), ("HighScore", loadHighScore)]}
+                                      | otherwise = return $ g{ world = handle e w }
     -- Bossfight WIP
     handleIO _ p = pure p
 
