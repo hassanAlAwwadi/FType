@@ -32,15 +32,15 @@ powerUp :: Ship -> PowerUp -> Ship
 powerUp s p = s{ gun = W.powerUp (gun s) p}
 
 instance C.Paint Ship where
-    paint Ship{ pos = (x,y), bullets = b, size = (sx,sy) } = do 
-        pb <- C.paint b
-        let ps = translate x y shipDrawing 
-        pure $ pictures [ps,pb] where 
+    paint Ship{ pos = (x,y), bullets = b, size = (sx,sy) } =  
+        let pb = C.paint b
+            ps = translate x y shipDrawing 
+        in pictures [ps,pb] where 
         shipDrawing = color blue $ rectangleSolid sx sy 
 
 instance C.Handle Ship where
     --handle :: Event -> Ship -> IO Ship
-    handle e s = pure $ case e of 
+    handle e s = case e of 
         EventKey (Char 'w') Down _ _ -> s { direction = ( fst $ direction s,  1 ) }
         EventKey (Char 's') Down _ _ -> s { direction = ( fst $ direction s, -1 ) }
         EventKey (Char 'd') Down _ _ -> s { direction = (  1, snd $ direction s ) }
@@ -53,12 +53,12 @@ instance C.Handle Ship where
 
 instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@(Ship p v d g bs _ _)  = do 
-        let np =  p L.+ v L.* d
-        tb <- C.tick f bs
-        tg <- C.tick f g
-        let (ng', nb) = shoot np (1,0) tg
-        return s {bullets = nb ++ tb, pos = np, gun = ng' }
+    tick f s@(Ship p v d g bs _ _)  = let 
+        np =  p L.+ v L.* d
+        tb = C.tick f bs
+        tg = C.tick f g
+        (ng', nb) = shoot np (1,0) tg
+        in s {bullets = nb ++ tb, pos = np, gun = ng' }
 
 instance C.Collidable Ship where
     --size :: Ship ->  (Float,Float)

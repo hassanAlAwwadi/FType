@@ -52,50 +52,49 @@ scroll :: Float -> World -> World
 scroll xdelta w@World { enemies = e } = w{ enemies = map (reposWithChildren (xdelta, 0)) e }
 
 instance Paint World where
-    paint World{player = p, enemies = es, powerUps = pus, timer = t} = do 
-        pw <- paint p
-        pe <- paint es
-        pu <- paint pus
+    paint World{player = p, enemies = es, powerUps = pus, timer = t} = let 
+        pw = paint p
+        pe = paint es
+        pu = paint pus
         --type app used to prevent defaulting of show
-        let pt = translate 0 400 . color white . text . show @ Integer $ floor t 
-        return $ pictures [pw, pt, pu, pe]
+        pt = translate 0 400 . color white . text . show @ Integer $ floor t 
+        in pictures [pw, pt, pu, pe]
 
 
 instance Handle World where
-    handle e w = do 
-        p <- handle e $ player w
-        return w {player = p}
+    -- just pass the handle event to the player ship
+    handle e w =  w {player = handle e $ player w}
 
 instance Tick World where 
-    tick f w = do 
+    tick f w = let 
         -- simple ticks
-        p <- tick f $ player w
-        e <- tick f $ enemies w
-        let t = timer (w::World) + f
+        p = tick f $ player w
+        e = tick f $ enemies w
+        t = timer (w::World) + f
 
         -- damage enemies after the tick event
-        let (nextRNG, e', newups) = damageAllEnemies (rng w) (S.bullets p) e
-        let ups = newups ++ powerUps w
+        (nextRNG, e', newups) = damageAllEnemies (rng w) (S.bullets p) e
+        ups = newups ++ powerUps w
 
         -- upgrade the player with powerups
-        let (touchedUps, freeUps) = partition (checkCollision p) ups
-        let upgradedP = foldr (flip S.powerUp) p touchedUps
+        (touchedUps, freeUps) = partition (checkCollision p) ups
+        upgradedP = foldr (flip S.powerUp) p touchedUps
 
         -- let enemies move to player
-        let eToP =  replaceDirection e' upgradedP
+        eToP =  replaceDirection e' upgradedP
         -- reset world if player is hit
         -- update it otherwise
-        let nw = if  playerhit p e
-                 then (resetWorld w) {lives = lives w -1, totalScore = totalScore w + floor t} 
-                 else w {
-                    player = upgradedP,
-                    enemies = eToP,
-                    timer = t,
-                    powerUps = freeUps,
-                    rng = nextRNG
-                 }
+        nw = if  playerhit p e
+             then (resetWorld w) {lives = lives w -1, totalScore = totalScore w + floor t} 
+             else w {
+                player = upgradedP,
+                enemies = eToP,
+                timer = t,
+                powerUps = freeUps,
+                rng = nextRNG
+                }
                  
-        return nw where
+        in nw where
             playerhit p es = any (\e -> E.deadly e && checkCollision p e) es || any (checkCollision p) (es >>= E.bullets)
         
 damageAllEnemies :: StdGen -> [Bullet] -> [E.Enemy] -> (StdGen, [E.Enemy], [PowerUp])

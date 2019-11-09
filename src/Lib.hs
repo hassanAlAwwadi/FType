@@ -17,10 +17,17 @@ import System.Random
 
 someFunc :: IO ()
 someFunc = do
+    -- get seed
     seed <- newStdGen
+    -- get explosion animation
+    explosionBMPs <- getExplosions
+    
     -- "smart" constructor of menu is used to create the main menu
-    let mainMenu = createMenu [("Level 1", loadLevel1 seed), ("HighScore", loadHighScore)]
-    playIO FullScreen black 30 MainMenu{ menu = mainMenu} paint handle tick
+    let mainMenu = createMenu [("play game", playGame seed), ("HighScore", loadHighScore)]
+    playIO FullScreen black 30 MainMenu{ menu = mainMenu} paintIO handleIO tickIO
+
+getExplosions :: IO [Picture]
+getExplosions = mapM loadBMP ["explosion/explosion_" ++ show n ++ ".bmp" | n <- ([1..12]::[Int])]
 
 data WorldState = Paused    { past ::WorldState } 
                 | Scrolling {scrollSpeed :: Float} 
@@ -32,13 +39,13 @@ pause (Paused s) = s
 pause  s         = Paused s
 
 data GameState = Playing    { world :: World, state :: WorldState} 
-               | MainMenu   { menu ::Menu GameState} 
-               | HighScores { mvps :: IO [(String, Float)]}
+               | MainMenu   { menu  :: Menu GameState} 
+               | HighScores { mvps  :: IO [(String, Float)]}
 
 
 --level 1 is wip, ok? OK?
-loadLevel1 :: StdGen -> GameState
-loadLevel1 seed = Playing{ world = startWorld seed, state = Scrolling (-0.5)}
+playGame :: StdGen -> GameState
+playGame seed = Playing{ world = startWorld seed, state = Scrolling (-0.5)}
 
 --loading the highscores
 loadHighScore :: GameState
@@ -55,55 +62,47 @@ readOrCreateFile p = do
     appendFile p ""
     readFile p 
 
-instance Paint GameState where
+instance PaintIO GameState where
     --paint menu
-    paint MainMenu{ menu = m }         = paint m
+    paintIO MainMenu{ menu = m }         = pure $ paint m
     --paint highscores
-    paint HighScores{ mvps = ioNames } = do
+    paintIO HighScores{ mvps = ioNames } = do
         scores <- ioNames
         let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
         let translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
     --paint paused game
-    paint Playing{ world = w, state = Paused s } = do 
-        pw <- paint w
+    paintIO Playing{ world = w, state = Paused s } = do 
+        let pw = paint w
         let pauseScreen = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
         pure $ pictures [pw, pauseScreen]
     --paint game
-    paint Playing{ world = w } = paint w
+    paintIO Playing{ world = w } = pure $ paint w
 
 
 
-instance Handle GameState where 
+instance HandleIO GameState where 
     -- the special keys. Exit game, pause game, menu action
-    handle (EventKey (SpecialKey KeyEsc)   Down _ _) _               = exitSuccess 
-    handle (EventKey (Char 'p') Down _ _) g@Playing{ state = s } = pure $ g{ state = pause s }
+    handleIO (EventKey (SpecialKey KeyEsc)   Down _ _) _               = exitSuccess 
+    handleIO (EventKey (Char 'p') Down _ _) g@Playing{ state = s } = pure $ g{ state = pause s }
     -- if for some the mainmenu failst to activate, it will just stay in the menu
-    handle (EventKey (SpecialKey KeyEnter) Down _ _) mm@MainMenu{ menu = m }  = pure $ fromMaybe mm $ menuAction m 
+    handleIO (EventKey (SpecialKey KeyEnter) Down _ _) mm@MainMenu{ menu = m }  = pure $ fromMaybe mm $ menuAction m 
     -- moving the menu
-    handle e mm@MainMenu{ menu = m }  = do 
-        nm <- handle e m
-        return $ mm{ menu = nm}
+    handleIO e mm@MainMenu{ menu = m }  = return $ mm{ menu = handle e m}
     -- playing the game
-    handle e g@Playing{ world = w } = do 
-        nw <- handle e w
-        return $ g{ world = nw }
+    handleIO e g@Playing{ world = w } = return $ g{ world = handle e w }
     -- Bossfight WIP
-    handle _ p = pure p
+    handleIO _ p = pure p
 
-instance Tick GameState where
+instance TickIO GameState where
     -- tick doesn't do anything if the game is paused
-    tick _ g@Playing{state = Paused _} = pure g
+    tickIO _ g@Playing{state = Paused _} = pure g
     -- No scrolling screen during bossfight
-    tick f g@Playing{ world = w, state = BossFight}            = do 
-        nw <- tick f w
-        return $ g{ world = nw }
+    tickIO f g@Playing{ world = w, state = BossFight} = return $ g{ world = tick f w }
     -- yes scrolling screen during non boss fights
-    tick f g@Playing{ world = w, state = Scrolling h }            = do 
-        nw <-  tick f $ scroll h w
-        return $ g{ world = nw }
-    -- safety net
-    tick _ a                        = pure a 
+    tickIO f g@Playing{ world = w, state = Scrolling h } = return $ g{ world = tick f $ scroll h w }
+    -- menu/highscore tick doesn't do anything
+    tickIO _ g = pure g  
 
 

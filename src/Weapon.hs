@@ -10,7 +10,7 @@ data Gun = Simple     { cal :: Float, power :: Float, cooldown :: Float, countdo
          | Laser      { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, lifespan :: Float} 
 
 instance Tick Gun where
-    tick f g = pure $ g{countdown = countdown g - f}
+    tick f g = g{countdown = countdown g - f}
 
 -- | the "level 1" specs of the three weapon types
 simple, spreadShot, laser :: Gun
@@ -23,13 +23,13 @@ data Bullet = Bullet    { size :: Float , pos :: Point, speed :: Float, directio
             | LaserBeam { width :: Float, pos :: Point, dmg :: Float, lifespan :: Float }
 
 instance Paint Bullet where
-    paint Bullet{ size = s, pos = (x,y) }     = pure $ translate x y . color yellow $ circleSolid s where 
-    paint LaserBeam{ width = w, pos = (x,y) } = pure $ translate x y . color yellow $ rectangleSolid 4000 w
+    paint Bullet{ size = s, pos = (x,y) }     = translate x y . color yellow $ circleSolid s 
+    paint LaserBeam{ width = w, pos = (x,y) } = translate x y . color yellow $ rectangleSolid 4000 w
 
 instance Tick Bullet where
     --tick :: Float -> Bullet -> IO Bullet
-    tick _ b@Bullet{pos = p, speed = v, direction = d}  = pure (b{ pos = p L.+ v L.* d}::Bullet)
-    tick f b@LaserBeam{lifespan = l} = pure (b{lifespan = l - f}::Bullet)
+    tick _ b@Bullet{pos = p, speed = v, direction = d}  =  b{ pos = p L.+ v L.* d}
+    tick f b@LaserBeam{lifespan = l} =  b{lifespan = l - f}
 
 instance Collidable Bullet where
     --size :: Bullet ->  (Float,Float)
@@ -57,8 +57,9 @@ data PowerUp = PUp { pos :: Point } -- Simple power up
              | LUp { pos :: Point } -- Laser power up
               deriving(Show)
 
+
 instance Paint PowerUp where
-    paint p = pure . color blue . scale 0.5 0.5 . Text $ case p of 
+    paint p = color blue . scale 0.5 0.5 . Text $ case p of 
         PUp{} -> "LUp"
         SUp{} -> "LUp"
         LUp{} -> "LUp"

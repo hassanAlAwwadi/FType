@@ -10,10 +10,10 @@ instance Paint (Menu a) where
     paint Menu {selected = s, menuItems = items} = 
         let menuSelector = translate 400 (fromIntegral $ 50 + s * (-250)) $ color yellow $ rectangleWire 900 200
             labels = uncurry (translate 0) <$> zip [0, (-250)..] (map (color white . text . fst) items)
-        in  pure $ translate (-50) 250 $ Pictures (menuSelector : labels)
+        in  translate (-50) 250 $ Pictures (menuSelector : labels)
 
 instance Handle (Menu a) where
-    handle e m@Menu{selected = s, maxSelected = ms} = pure $ case e of 
+    handle e m@Menu{selected = s, maxSelected = ms} =  case e of 
         EventKey (Char 'w') Down _ _ -> m { selected = max 0  $ s-1}
         EventKey (Char 's') Down _ _ -> m { selected = min ms $ s+1}
         _                            -> m

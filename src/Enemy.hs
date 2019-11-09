@@ -38,23 +38,23 @@ deadly Enemy{} = True
 deadly _ = False
 
 instance C.Paint Enemy where
-    paint Enemy{ size = s, pos = (x,y), bullets = b } = do
-         pb <- C.paint b
-         let pe = translate x y enemyDrawing 
-         pure $ pictures [pe,pb] where 
+    paint Enemy{ size = s, pos = (x,y), bullets = b } = let
+         pb = C.paint b
+         pe = translate x y enemyDrawing 
+         in pictures [pe,pb] where 
          enemyDrawing = color red $ rectangleSolid s s 
     paint GraveMarker{bullets = b} = C.paint b
 
 instance C.Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
-    tick f e@Enemy{ pos = p, speed = v, direction = d, gun = g, bullets = b} = do
-        tb <- C.tick f b
-        tg <- C.tick f g
-        let (sg, nb) = shoot  p d  tg
-        pure e { pos = p L.+ v L.* d, bullets = nb++tb, gun = sg }
-    tick f g@GraveMarker{bullets = b} = do
-        nb <- C.tick f b
-        return g{bullets = nb}
+    tick f e@Enemy{ pos = p, speed = v, direction = d, gun = g, bullets = b} = let
+        tb = C.tick f b
+        tg = C.tick f g
+        (sg, nb) = shoot  p d  tg
+        in e { pos = p L.+ v L.* d, bullets = nb++tb, gun = sg }
+    tick f g@GraveMarker{bullets = b} = 
+        -- gravemarker just updates bullets
+        g{bullets = C.tick f b}
     
 instance C.Collidable Enemy where
     --size :: Enemy ->  (Float,Float)
