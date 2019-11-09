@@ -12,10 +12,11 @@ import Menu(Menu, createMenu, menuAction)
 
 import Graphics.Gloss.Interface.IO.Game
 
-data Game   = Playing    { world :: World, state :: WorldState} 
-            | MainMenu   { menu  :: Menu Game } 
+data Game   = Playing      { world :: World, state :: WorldState} 
+            | MainMenu     { menu  :: Menu Game } 
             -- | Highcores are really the only reason we need to use playIO instead of regular play
-            | HighScores { mvps  :: IO [(String, Float)]}
+            | HighScores   { mvps  :: IO [(String, Float)]}
+            | NewHighScore { nameWIP :: String, score :: Float}
 
 
 instance Creatable Game where
@@ -44,7 +45,7 @@ instance PaintIO Game where
     --paint highscores
     paintIO HighScores{ mvps = ioNames } = do
         scores <- ioNames
-        let nameandscores = map (\(name, score) -> Text $ name ++ ":" ++ show score) scores
+        let nameandscores = map (\(name, s) -> Text $ name ++ ":" ++ show s) scores
         let translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
@@ -55,6 +56,7 @@ instance PaintIO Game where
         pure $ pictures [pw, pauseScreen]
     --paint game
     paintIO Playing{ world = w } = pure $ paint w
+    paintIO NewHighScore{ nameWIP = n, score = s} =  return $ pictures $ map (color white) [text $ "Your Name: \n" ++ n ++ "_", text $ "Your Score: " ++ show s]
 
 
 
@@ -69,6 +71,16 @@ instance HandleIO Game where
     -- playing the game
     handleIO e g@Playing{ world = w } | lives w == 0 =  handleIO e MainMenu {menu = createMenu [("play game", Playing w {lives = 3} $ Scrolling (-0.5)), ("HighScore", loadHighScore)]}
                                       | otherwise = return $ g{ world = handle e w }
+    
+    --WriteHighScore 
+    handleIO e g@NewHighScore{ nameWIP = n, score = s} = case e of 
+        EventKey (Char c) Down _ _ -> return $ g{ nameWIP = n ++ [c]}
+        EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
+        -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
+        EventKey (SpecialKey KeyEnter) Down _ _ -> do
+            writeFile "HighScores.txt" $ show (n, s) ++ "\n"
+            return loadHighScore
+        _ -> return g
     -- Bossfight WIP
     handleIO _ p = pure p
 
