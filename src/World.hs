@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeApplications#-}
-module World(World, lives, resetWorld, scroll, WorldState(..), pause) where
+module World(World, lives, score, resetWorld, scroll, WorldState(..), pause) where
 
 
 import Data.List(partition)
@@ -24,14 +24,12 @@ data World = World {
     level :: Int,
     timer :: Float,
     powerUps :: [PowerUp],
-    totalScore :: Int,
     staticResource :: StaticResource,
     dynamicResource :: DynamicResource
 }
 
 instance Creatable World where
     create stat dyn = World {
-        totalScore = 0,
         player = create stat dyn,
         enemies = [create stat dyn],
         lives = 3,
@@ -95,7 +93,7 @@ instance Tick World where
         -- reset world if player is hit
         -- update it otherwise
         nw = if  playerhit p e
-             then (resetWorld w) {lives = lives w -1, totalScore = totalScore w + floor t} 
+             then (resetWorld w) {lives = lives w -1, score = score w + floor t} 
              else w {
                 player = upgradedP,
                 enemies = eToP,
