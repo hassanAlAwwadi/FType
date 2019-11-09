@@ -78,18 +78,20 @@ instance Tick World where
         e = tick f $ enemies w
         t = timer (w::World) + f
 
+        -- remove enemies that have gone out of the border range
+        e' =  filter (not . outOfBorder (border $ staticResource w)) e
         -- damage enemies after the tick event
-        (nextRNG, e', newups) = damageAllEnemies (rng $ dynamicResource w) (S.bullets p) e
+        (nextRNG, e'', newups) = damageAllEnemies (rng $ dynamicResource w) (S.bullets p) e'
         ups = newups ++ powerUps w
 
         -- upgrade the player with powerups
         (touchedUps, freeUps) = partition (checkCollision p) ups
         upgradedP = foldr (flip S.powerUp) p touchedUps
 
-        e'' | round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0= spawnEnemy (staticResource w) (dynamicResource w) e' 
-            | otherwise = e'
+        e''' | round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 = spawnEnemy (staticResource w) (dynamicResource w) e''
+             | otherwise = e''
         -- let enemies move to player
-        eToP =  replaceDirection e'' upgradedP
+        eToP =  replaceDirection e''' upgradedP
         -- reset world if player is hit
         -- update it otherwise
         nw = if  playerhit p e

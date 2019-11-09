@@ -67,7 +67,7 @@ instance HandleIO Game where
     -- moving the menu
     handleIO e mm@MainMenu{ menu = m }  = return $ mm{ menu = handle e m}
     -- playing the game
-    handleIO e g@Playing{ world = w } | lives w == 0 =  handleIO e MainMenu {menu =createMenu [("play game", Playing w {lives = 3} $ Scrolling (-0.5)), ("HighScore", loadHighScore)]}
+    handleIO e g@Playing{ world = w } | lives w == 0 =  handleIO e MainMenu {menu = createMenu [("play game", Playing w {lives = 3} $ Scrolling (-0.5)), ("HighScore", loadHighScore)]}
                                       | otherwise = return $ g{ world = handle e w }
     -- Bossfight WIP
     handleIO _ p = pure p
@@ -78,6 +78,6 @@ instance TickIO Game where
     -- No scrolling screen during bossfight
     tickIO f g@Playing{ world = w, state = BossFight _} = return $ g{ world = tick f w }
     -- yes scrolling screen during non boss fights
-    tickIO f g@Playing{ world = w, state = Scrolling h } = return $ g{ world = tick f $ scroll h w }
+    tickIO f g@Playing{ world = w, state = Scrolling h } =  return $ g{ world = tick f $ scroll h w }
     -- menu/highscore tick doesn't do anything
     tickIO _ g = pure g  
