@@ -65,8 +65,8 @@ instance PaintIO Game where
     --paint game
     paintIO Playing{ world = w } = pure $ paint w
     paintIO NewHighScore{ nameWIP = n, Game.score = s} =  return $ pictures $ map (color white) [
-        translate (-500) 0      $ text $ "Your Name: \n" ++ n ++ "_", 
-        translate (-500) (-250) $ text $ "Your Score: " ++ show s
+        translate (-700) 0      $ text $ "Your Name: \n" ++ n ++ "_", 
+        translate (-700) (-250) $ text $ "Your Score: " ++ show s
         ]
 
 
@@ -85,12 +85,15 @@ instance HandleIO Game where
     
     --WriteHighScore 
     handleIO e g@NewHighScore{ nameWIP = n, Game.score = s} = case e of 
-        EventKey (Char c) Down _ _ -> return $ g{ nameWIP = n ++ [c]}
-        EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
-        -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
             appendFile "HighScores.txt" $ show (n, s) ++ "\n"
             return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
+
+        EventKey (Char '\b') Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
+        EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
+
+        EventKey (Char c) Down _ _ -> return $ g{ nameWIP = n ++ [c]}
+        EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         _ -> return g
     -- Bossfight WIP
     handleIO _ p = pure p
