@@ -15,7 +15,7 @@ someFunc = do
     -- get seed
     seed <- getSeed
     -- get explosion animation
-    explosionBMPs <- getExplosions
+    explosionBMPs <- getExplosions 24
     -- initial game 
     let initialGame = create (StaticResource explosionBMPs) (DynamicResource seed) :: Game
     -- "smart" constructor of menu is used to create the main menu
