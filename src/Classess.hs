@@ -2,7 +2,7 @@ module Classess(
     Paint, paint, PaintIO, paintIO,
     Handle, handle, HandleIO, handleIO,
     Tick, tick, TickIO, tickIO,
-    Collidable, size , position, repos, reposChildren, reposWithChildren, checkCollision,
+    Collidable, size , position, repos, reposChildren, reposWithChildren, checkCollision, outOfBorder, pastBorder,
     Creatable, create
 ) where
 
@@ -60,6 +60,17 @@ checkCollision c1 c2= not (intersectX (size c1) (position c1) (size c2) (positio
             intersectY    (_,ys1) (_,yp1) (_,ys2) (_,yp2) |yp2>yp1=yp2 - yp1 - ys1/2 - ys2/2 > 0 
                                                           |yp2<yp1=yp1 - (yp2 + ys1/2 + ys2/2) > 0
                                                           |otherwise = False
+
+outOfBorder :: Collidable a => Border -> a -> Bool
+outOfBorder b a = let
+    (x,y) = position a
+    in (x < xmin b || x > xmax b || y < ymin b || y > ymax b)
+
+
+pastBorder :: Collidable a => Border -> a -> Bool
+pastBorder b a = let
+    (x,_) = position a
+    in (x < xmin b)
 
 class Creatable c where
     create :: StaticResource -> DynamicResource -> c

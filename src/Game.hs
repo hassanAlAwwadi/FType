@@ -86,6 +86,7 @@ instance TickIO Game where
     tickIO f g@Playing{ world = w, state = BossFight _} = return $ g{ world = tick f w }
     -- yes scrolling screen during non boss fights
     tickIO f g@Playing{ world = w, state = Scrolling h } | lives w == 0 &&score w>0 =  tickIO 0 (loadHighScore (writeHighScore (score w)))
+                                                         | lives w == 0  =  tickIO 0 (loadHighScore (readOrCreateFile  "HighScores.txt"))
                                                          | otherwise = return $ g{ world = tick f $ scroll h w }
     -- menu/highscore tick doesn't do anything
     tickIO _ g = pure g  
