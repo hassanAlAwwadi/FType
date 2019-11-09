@@ -1,16 +1,19 @@
 {-# LANGUAGE TypeApplications#-}
-module World(World, startWorld, resetWorld, scroll) where
+module World(World, resetWorld, scroll, WorldState(..), pause) where
 
 
 import Data.List(partition)
 import System.Random
 import Control.Arrow(second)
 
-import Classess
 import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
-import qualified Ship as S(Ship, ship, bullets, powerUp,pos)
-import qualified Enemy as E (Enemy,Enemy(GraveMarker), enemy, bullets, damage, deadly,direction,pos)
+
+import Classess
+import Resources
+
+import qualified Ship as S(Ship, bullets, powerUp,pos)
+import qualified Enemy as E (Enemy,Enemy(GraveMarker), bullets, damage, deadly,direction,pos)
 import Weapon(Bullet, PowerUp, dmg)
 
 data World = World {
@@ -22,30 +25,33 @@ data World = World {
     timer :: Float,
     powerUps :: [PowerUp],
     totalScore :: Int,
-    rng :: StdGen
+    staticResource :: StaticResource,
+    dynamicResource :: DynamicResource
 }
 
-startWorld :: StdGen -> World
-startWorld seed = World {
-    totalScore = 0,
-    player = S.ship,
-    enemies = [E.enemy],
+instance Creatable World where
+    create stat dyn = World {
+        totalScore = 0,
+        player = create stat dyn,
+        enemies = [create stat dyn],
+        lives = 3,
+        score = 0,
+        level = 0,
+        timer = 0,
+        powerUps = [],
+        staticResource = stat,
+        dynamicResource = dyn
+    }
+    
+resetWorld :: World -> World
+resetWorld w@World{staticResource = stat, dynamicResource = dyn} = w{
+    player = create stat dyn,
+    enemies = [create stat dyn],
     lives = 3,
     score = 0,
     level = 0,
     timer = 0,
-    powerUps = [],
-    rng = seed
-} 
-
-resetWorld :: World -> World
-resetWorld world = world {
-    player = S.ship,
-    enemies = [E.enemy],
-    lives = 3,
-    score = 0,
-    level = 0,
-    timer = 0
+    powerUps = []
 }
 
 scroll :: Float -> World -> World
@@ -73,7 +79,7 @@ instance Tick World where
         t = timer (w::World) + f
 
         -- damage enemies after the tick event
-        (nextRNG, e', newups) = damageAllEnemies (rng w) (S.bullets p) e
+        (nextRNG, e', newups) = damageAllEnemies (rng $ dynamicResource w) (S.bullets p) e
         ups = newups ++ powerUps w
 
         -- upgrade the player with powerups
@@ -91,7 +97,7 @@ instance Tick World where
                 enemies = eToP,
                 timer = t,
                 powerUps = freeUps,
-                rng = nextRNG
+                dynamicResource = (dynamicResource w){ rng = nextRNG }
                 }
                  
         in nw where
@@ -110,8 +116,18 @@ damageAllEnemies seed bs es =
 
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
 replaceDirection e s = map shipDirection e
-                    where shipDirection e'@(E.GraveMarker _ _) =e'
+                    where shipDirection e'@E.GraveMarker{} = e'
                           shipDirection e' = e' {E.direction = forward (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
                           forward (x,y) = (- (abs x),y)
+
+
+data WorldState = Paused    { past :: WorldState } 
+                | Scrolling { scrollSpeed :: Float } 
+             -- | for now there is still no way to get in or out of a bossfight
+                | BossFight { boss :: E.Enemy } deriving (Show)
+          
+pause :: WorldState -> WorldState
+pause (Paused s) = s
+pause  s         = Paused s

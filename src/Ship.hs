@@ -1,4 +1,4 @@
-module Ship(Ship, ship, bullets, Ship.powerUp, pos) where
+module Ship(Ship, bullets, Ship.powerUp, pos) where
 
 import qualified Classess as C
 import Graphics.Gloss
@@ -15,18 +15,18 @@ data Ship = Ship {
     bullets :: [Bullet],
     bombs :: Int,
     size :: (Float,Float)
-}
+} deriving (Read, Show)
 
-ship :: Ship
-ship = Ship{ 
-    pos = (-420,0), 
-    speed = 13, 
-    direction = (0,0), 
-    gun = simple, 
-    bullets = [], 
-    bombs = 0, 
-    size = (40,20)
-} 
+instance C.Creatable Ship where
+    create _ _ = Ship{ 
+        pos = (-420,0), 
+        speed = 13, 
+        direction = (0,0), 
+        gun = simple, 
+        bullets = [], 
+        bombs = 0, 
+        size = (40,20)
+    } 
 
 powerUp :: Ship -> PowerUp -> Ship
 powerUp s p = s{ gun = W.powerUp (gun s) p}

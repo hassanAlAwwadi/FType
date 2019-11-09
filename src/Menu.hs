@@ -4,7 +4,7 @@ import Classess
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
 
-data Menu a = Menu { menuItems :: [(String, a)], maxSelected :: Int, selected :: Int }
+data Menu a = Menu { menuItems :: [(String, a)], maxSelected :: Int, selected :: Int } deriving (Read, Show)
 
 instance Paint (Menu a) where
     paint Menu {selected = s, menuItems = items} = 
