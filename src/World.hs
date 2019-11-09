@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeApplications#-}
-module World(World, lives, resetWorld, scroll, WorldState(..), pause) where
+module World(World, lives, score, resetWorld, scroll, WorldState(..), pause) where
 
 
 import Data.List(partition)
