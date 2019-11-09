@@ -80,7 +80,7 @@ instance Tick World where
         (touchedUps, freeUps) = partition (checkCollision p) ups
         upgradedP = foldr (flip S.powerUp) p touchedUps
 
-        e'' | (round t) `mod` 10 == 0 = spawnEnemy e'
+        e'' | (round t) `mod` 2 == 0 = spawnEnemy e'
             | otherwise = e'
         -- let enemies move to player
         eToP =  replaceDirection e'' upgradedP
@@ -119,5 +119,7 @@ replaceDirection e s = map shipDirection e
                           forward (x,y) = (- (abs x),y)
 
 spawnEnemy :: [E.Enemy] -> [E.Enemy]
-spawnEnemy e = newEnemy:e
+spawnEnemy e = e3:e2:newEnemy:e
             where newEnemy = E.enemy {E.pos = (1000,10) }
+                  e2 = E.enemy {E.pos = (1000,-500) }
+                  e3 = E.enemy {E.pos = (1000,500) }

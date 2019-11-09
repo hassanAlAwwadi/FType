@@ -27,7 +27,7 @@ someFunc = do
     playIO FullScreen black 30 MainMenu{ menu = mainMenu} paintIO handleIO tickIO
 
 getExplosions :: IO [Picture]
-getExplosions = mapM loadBMP ["explosion/explosion_" ++ show n ++ ".bmp" | n <- ([1..12]::[Int])]
+getExplosions = mapM loadBMP []
 
 data WorldState = Paused    { past ::WorldState } 
                 | Scrolling {scrollSpeed :: Float} 
