@@ -24,9 +24,9 @@ data World = World {
     level :: Int,
     timer :: Float,
     powerUps :: [PowerUp],
-    state :: WorldState,
     stat :: StaticResource,
-    dyn :: DynamicResource
+    dyn :: DynamicResource,
+    difficulty :: Int
 }
 
 instance Creatable World where
@@ -40,7 +40,7 @@ instance Creatable World where
         powerUps = [],
         stat = s,
         dyn = d,
-        state = Scrolling 0.5
+        difficulty = 1
     }
 
 withPlayer2 :: World -> World 
@@ -53,7 +53,8 @@ resetWorld w@World{stat = s, dyn = d} = w{
     lives = 3,
     level = 0,
     timer = 0,
-    powerUps = []
+    powerUps = [],
+    difficulty = 1
 }
 
 scroll :: Float -> World -> World
@@ -75,13 +76,17 @@ instance Handle World where
 
 instance Tick World where 
     tick f world = let 
+        -- update the timer
+        t = timer (w::World) + f
+
+        -- set the difficulty
+        newDifficulty = 1 + div @ Int (floor t) 10
         -- scroll the entire world
         w = scroll f world
         -- simple ticks
         ps = tick f  <$> players w
 
         e = tick f $ enemies w
-        t = timer (w::World) + f
 
         -- remove enemies that have gone out of the border range
         e' =  filter (not . E.cullTarget) e
@@ -94,14 +99,15 @@ instance Tick World where
         (upgradedPs, remainingUps) = upgradeMulti ps ups []
         
 
+        -- spawn enemies
         (nextDyn', enext) = if round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 
-               then spawnEnemy (stat w) nextDyn e''
+               then spawnEnemy (stat w) nextDyn newDifficulty e''
                else (nextDyn, e'')
 
         -- let enemies move to player1
-
         eToP =  replaceDirection enext upgradedPs
         -- reset world if player1 is hit
+
         -- update it otherwise
         nw = if  playerhit eToP upgradedPs 
              then (resetWorld w) {lives = lives w -1, score = score w + floor t} 
@@ -110,7 +116,8 @@ instance Tick World where
                 enemies = eToP,
                 timer = t,
                 powerUps = remainingUps,
-                dyn = nextDyn'
+                dyn = nextDyn',
+                difficulty = newDifficulty
                 }
                  
         in nw 
@@ -166,30 +173,22 @@ replaceDirection' (e,sp) = shipDirection e
                                         where maxAngle' = 0.8
 
 --spawn at most 10 enemys with 2 spreadshot enemies with extra life
-spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> (DynamicResource, [E.Enemy])
-spawnEnemy s d e = let
-    (rval, rng') = randomR (1::Int,100) $ rng d
-    nd = d{rng = rng'}
-    template = create s d
-    e1 = template {E.pos = (1000,0) }
-    e2 = template {E.pos = (1000,-200) ,E.gun = spreadShot, E.health = 3 }
-    e4 = template {E.pos = (1000,200) }
-    e3 = template {E.pos = (1000,400) ,E.gun = spreadShot, E.health = 3}
-    e5 = template {E.pos = (1000,-400) }
-    e7 = template {E.pos = (1000,-600) ,E.gun = spreadShot, E.health = 3 }
-    e6 = template {E.pos = (1000,600) }
-    e8 = template {E.pos = (1000,800) ,E.gun = spreadShot, E.health = 3}
-    e9 = template {E.pos = (1000,-800) }
-    in if   | rval > 99 -> (nd,e9:e8:e7:e6:e5:e4:e3:e2:e1:e)
-            | rval > 88 -> (nd,e8:e7:e6:e5:e4:e3:e2:e1:e)
-            | rval > 77 -> (nd,e7:e6:e5:e4:e3:e2:e1:e)
-            | rval > 66 -> (nd,e6:e5:e4:e3:e2:e1:e)
-            | rval > 55 -> (nd,e5:e4:e3:e2:e1:e)
-            | rval > 44 -> (nd,e4:e3:e2:e1:e)
-            | rval > 33 -> (nd,e3:e2:e1:e)
-            | rval > 22 -> (nd,e2:e1:e)
-            | rval > 11 -> (nd,e1:e)
-            | otherwise -> (nd, e) 
+spawnEnemy :: StaticResource -> DynamicResource -> Int -> [E.Enemy] -> (DynamicResource, [E.Enemy])
+spawnEnemy s d n e = go d e n n where 
+    go :: DynamicResource -> [E.Enemy] -> Int -> Int -> (DynamicResource, [E.Enemy])
+    go gd ge (-1) _ = (gd, ge)
+    go gd ge gn gl 
+        | evenN && rval > 75 = (gd', spread  {E.pos = (1000,700 * rval/100 )   } :ge')
+        | evenN && rval > 50 = (gd', spread  {E.pos = (1000,(-700) * rval/100) } :ge')
+        | rval > 75          = (gd', regular {E.pos = (1000,700 * rval/100) }    :ge')
+        | rval > 50          = (gd', regular {E.pos = (1000,(-700) * rval/100) } :ge')
+        | otherwise = (gd', ge') where
+        (rval, rng') = randomR (0::Float,100) $ rng gd
+        (gd', ge') = go gd{rng = rng'} ge (gn-1) gl
+        evenN = even n      
+        regular = (create s gd'){E.health = fromIntegral gl}
+        spread = regular {E.gun = spreadShot, E.health = fromIntegral gl * 1.3 }
+    
 
 
 data WorldState = Paused    { past :: WorldState } 
