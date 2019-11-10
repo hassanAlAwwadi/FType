@@ -7,22 +7,36 @@ import Data.List as S(sortBy)
 import qualified Data.Ord as D (Down(..), comparing) 
 
 import Classess as C
-import World(World, lives, score, WorldState(..), pause, scroll)
+import Resources as R(StaticResource, DynamicResource)
+import World as W(World, lives, score, stat, dyn)
 import Menu(Menu, createMenu, menuAction)
 
 import Graphics.Gloss.Interface.IO.Game
 
-data Game   = Playing      { world :: World, state :: WorldState} 
-            | MainMenu     { menu  :: Menu Game } 
+data Game   = Playing      { world :: World} 
+            | Menu         { menu  :: Menu (IO Game) } 
             -- | Highcores are really the only reason we need to use playIO instead of regular play
             | HighScores   { mvps  :: IO [(String, Float)]}
             | NewHighScore { nameWIP :: String, score :: Int}
 
 
 instance Creatable Game where
-    create stat dyn = MainMenu $ createMenu [("play game", Playing w $ Scrolling (-0.5)), ("HighScore", loadHighScore (readOrCreateFile  "HighScores.txt") )] where
-        w = create stat dyn
+    create s d = Menu $ mainMenu s d
 
+mainMenu :: StaticResource -> DynamicResource -> Menu (IO Game)
+mainMenu s d = createMenu [
+    ("play game", pure $ Playing w), 
+    ("HighScore", pure $ loadHighScore (readOrCreateFile  "HighScores.txt") ),
+    ("Quit Game", exitSuccess)
+    ] where
+    w = create s d
+
+pauseMenu :: World -> Menu (IO Game)
+pauseMenu  w = createMenu [
+    ("Resume game", pure $ Playing w), 
+    ("Main menu", pure $ Menu $ mainMenu (stat w) (dyn w) ),
+    ("Quit Game", exitSuccess)
+    ]
 
 --loading the highscores
 loadHighScore :: IO String -> Game
@@ -49,7 +63,7 @@ readOrCreateFile p = do
 
 instance PaintIO Game where
     --paint menu
-    paintIO MainMenu{ menu = m }         = pure $ paint m
+    paintIO Menu{ menu = m }         = pure $ paint m
     --paint highscores
     paintIO HighScores{ mvps = ioNames } = do
         scores <- ioNames
@@ -57,11 +71,6 @@ instance PaintIO Game where
         let translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         let single = color white $ pictures translated
         return $ translate (-900) 300 single
-    --paint paused game
-    paintIO Playing{ world = w, state = Paused s } = do 
-        let pw = paint w
-        let pauseScreen = translate (-900) (-100) $ scale 4 4 $ color white $ text $ show (Paused s)
-        pure $ pictures [pw, pauseScreen]
     --paint game
     paintIO Playing{ world = w } = pure $ paint w
     paintIO NewHighScore{ nameWIP = n, Game.score = s} =  return $ pictures $ map (color white) [
@@ -74,19 +83,18 @@ instance PaintIO Game where
 instance HandleIO Game where 
     -- the special keys. Exit game, pause game, menu action
     handleIO (EventKey (SpecialKey KeyEsc)   Down _ _) _               = exitSuccess 
-    handleIO (EventKey (Char 'p') Down _ _) g@Playing{ state = s } = pure $ g{ state = pause s }
+    handleIO (EventKey (Char 'p') Down _ _) Playing{world = w} = pure $ Menu $ pauseMenu w
     -- if for some the mainmenu failst to activate, it will just stay in the menu
-    handleIO (EventKey (SpecialKey KeyEnter) Down _ _) mm@MainMenu{ menu = m }  = pure $ fromMaybe mm $ menuAction m 
+    handleIO (EventKey (SpecialKey KeyEnter) Down _ _) mm@Menu{ menu = m }  = fromMaybe (pure mm) $ menuAction m 
     -- moving the menu
-    handleIO e mm@MainMenu{ menu = m }  = return $ mm{ menu = handle e m}
+    handleIO e mm@Menu{ menu = m }  = return $ mm{ menu = handle e m}
     -- playing the game
-    handleIO e g@Playing{ world = w } | lives w == 0 =  handleIO e MainMenu {menu = createMenu [("play game", Playing w {lives = 3} $ Scrolling (-0.5)), ("HighScore", loadHighScore  (readOrCreateFile  "HighScores.txt"))]}
-                                      | otherwise = return $ g{ world = handle e w }
+    handleIO e g@Playing{ world = w } = return $ g{ world = handle e w }
     
     --WriteHighScore 
     handleIO e g@NewHighScore{ nameWIP = n, Game.score = s} = case e of 
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
-            appendFile "HighScores.txt" $ show (n, s) ++ "\n"
+            appendFile "\nHighScores.txt" $ show (n, s) ++ "\n"
             return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
 
         EventKey (Char '\b') Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
@@ -99,13 +107,8 @@ instance HandleIO Game where
     handleIO _ p = pure p
 
 instance TickIO Game where
-    -- tick doesn't do anything if the game is paused
-    tickIO _ g@Playing{state = Paused _} = pure g
-    -- No scrolling screen during bossfight
-    tickIO f g@Playing{ world = w, state = BossFight _} = return $ g{ world = tick f w }
     -- yes scrolling screen during non boss fights
-    tickIO f g@Playing{ world = w, state = Scrolling h } | lives w == 0 && World.score w > 0 =  pure $ NewHighScore {nameWIP = "", Game.score = World.score w}
-                                                         | lives w == 0  =  tickIO 0 (loadHighScore (readOrCreateFile  "HighScores.txt" ))
-                                                         | otherwise = return $ g{ world = tick f $ scroll h w }
+    tickIO f g@Playing{ world = w } | lives w == 0 =  pure $ NewHighScore {nameWIP = "", Game.score = W.score w}
+                                                         | otherwise    = return $ g{ world = tick f w }
     -- menu/highscore tick doesn't do anything
     tickIO _ g = pure g  
