@@ -76,5 +76,5 @@ powerUp :: Gun -> PowerUp -> Gun
 powerUp g@Simple    { power = p, cal = c} PUp{}       = g{ cal = c *1.3, power = p * 1.5 }
 powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
 -- gun and powerup don't match -> gun gets reset
-powerUp _  PUp{} = simpleShip
+powerUp _  PUp{} = simple
 powerUp _  SUp{} = spreadShot
