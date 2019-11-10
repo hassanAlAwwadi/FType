@@ -30,22 +30,22 @@ data World = World {
 }
 
 instance Creatable World where
-    create stat dyn = World {
-        player = create stat dyn,
+    create s d = World {
+        player = create s d,
         enemies = [],
         lives = 3,
         score = 0,
         level = 0,
         timer = 0,
         powerUps = [],
-        stat = stat,
-        dyn = dyn,
+        stat = s,
+        dyn = d,
         state = Scrolling 0.5
     }
     
 resetWorld :: World -> World
-resetWorld w@World{stat = stat, dyn = dyn} = w{
-    player = create stat dyn,
+resetWorld w@World{stat = s, dyn = d} = w{
+    player = create s d,
     enemies = [],
     lives = 3,
     level = 0,
@@ -128,8 +128,8 @@ replaceDirection e s = map shipDirection e
                           forward (x,y) = (- (abs x),y)
 
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
-spawnEnemy stat dyn e = e5:e4:e3:e2:e1:e
-            where template = create stat dyn
+spawnEnemy s d e = e5:e4:e3:e2:e1:e
+            where template = create s d
                   e1 = template {E.pos = (1000,0) }
                   e2 = template {E.pos = (1000,-400) ,E.gun = spreadShot }
                   e3 = template {E.pos = (1500,400) ,E.gun = spreadShot}
@@ -140,8 +140,5 @@ data WorldState = Paused    { past :: WorldState }
                 | Scrolling { scrollSpeed :: Float } 
              -- | for now there is still no way to get in or out of a bossfight
                 | BossFight { boss :: E.Enemy } deriving (Show)
-          
-pause :: WorldState -> WorldState
-pause (Paused s) = s
-pause  s         = Paused s
+        
 
