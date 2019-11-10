@@ -99,7 +99,7 @@ instance HandleIO Game where
         EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
-            appendFile "\nHighScores.txt" $ show (n, s) ++ "\n"
+            appendFile "HighScores.txt" $ '\n' : show (n, s) ++ "\n"
             return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
 
         EventKey (Char '\b') Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
