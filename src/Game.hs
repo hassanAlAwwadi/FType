@@ -17,7 +17,7 @@ import Graphics.Gloss.Interface.IO.Game
 data Game   = Playing      { world :: World} 
             | Menu         { menu  :: Menu (IO Game) } 
             -- | Highcores are really the only reason we need to use playIO instead of regular play
-            | HighScores   { mvps  :: [(String, Float)]}
+            | HighScores   { mvps  :: [(String, Float)], scrollUp :: Bool, scrollDown :: Bool, scrollDelta :: Float}
             | NewHighScore { nameWIP :: String, score :: Int}
 
 
@@ -41,13 +41,11 @@ pauseMenu  w = createMenu [
 
 --loading the highscores
 loadHighScore :: IO String -> IO Game
-loadHighScore file= 
-    let list = do 
-            file' <- file
-            let filelines = lines file'
-            let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
-            return $ HighScores { mvps = scores }
-    in list
+loadHighScore file = do 
+    file' <- file
+    let filelines = lines file'
+    let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
+    return $ HighScores { mvps = scores, scrollDown = False, scrollUp = False, scrollDelta = 0 }
 
 --write the highscores
 writeHighScore :: Int -> IO String
@@ -67,11 +65,11 @@ instance Paint Game where
     --paint menu
     paint Menu{ menu = m }           = paint m
     --paint highscores
-    paint HighScores{ mvps = names } = let
-        nameandscores = map (\(name, s) -> Text $ name ++ ":" ++ show s) names
+    paint HighScores{ mvps = names, scrollDelta = sd} = let
+        nameandscores = map (\(name, s) -> scale 0.6 0.6 $ Text $ name ++ ":" ++ show s) names
         translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         single = color white $ pictures translated
-        in translate (-900) 300 single
+        in translate (-900) (sd + 400) single
     --paint game
     paint Playing{ world = w } = paint w
     paint NewHighScore{ nameWIP = n, Game.score = s} = pictures $ map (color white) [
@@ -100,13 +98,22 @@ instance HandleIO Game where
         -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
             appendFile "HighScores.txt" $ '\n' : show (n, s)
-            loadHighScore  (readOrCreateFile  "HighScores.txt")
+            loadHighScore (readOrCreateFile  "HighScores.txt")
         _ -> return g
-    -- Bossfight WIP
-    handleIO _ p = pure p
+    -- you can scroll up and down for highscores
+    handleIO e g@HighScores{} =pure $ case e of
+        EventKey (Char 'w') Down _ _ -> g{scrollUp   = True}
+        EventKey (Char 's') Down _ _ -> g{scrollDown = True}
+        EventKey (Char 'w') Up   _ _ -> g{scrollUp   = False}
+        EventKey (Char 's') Up   _ _ -> g{scrollDown = False}
+        _                            -> g
 
 instance Tick Game where
     tick f g@Playing{ world = w } | lives w == 0 = NewHighScore {nameWIP = "", Game.score = W.score w}
                                     | otherwise  =  g{ world = tick f w }
     -- menu/highscore tick doesn't do anything
+    tick _ g@HighScores{scrollUp = up, scrollDown = down, scrollDelta = d} 
+        | up   = g{scrollDelta = d + 5}
+        | down = g{scrollDelta = d - 5}
+        | otherwise  = g
     tick _ g = g  

@@ -142,4 +142,3 @@ data WorldState = Paused    { past :: WorldState }
              -- | for now there is still no way to get in or out of a bossfight
                 | BossFight { boss :: E.Enemy } deriving (Show)
         
-

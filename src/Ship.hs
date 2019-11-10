@@ -45,15 +45,15 @@ instance C.Paint Ship where
 
 instance C.Handle Ship where
     --handle :: Event -> Ship -> IO Ship
-    handle e s = case e of 
-        EventKey (Char 'w') Down _ _ -> s { direction = ( fst $ direction s,  1 ) }
-        EventKey (Char 's') Down _ _ -> s { direction = ( fst $ direction s, -1 ) }
-        EventKey (Char 'd') Down _ _ -> s { direction = (  1, snd $ direction s ) }
-        EventKey (Char 'a') Down _ _ -> s { direction = ( -1, snd $ direction s ) }
-        EventKey (Char 'w') Up   _ _ -> s { direction = ( fst $ direction s,  0 ) }
-        EventKey (Char 's') Up   _ _ -> s { direction = ( fst $ direction s,  0 ) }
-        EventKey (Char 'd') Up   _ _ -> s { direction = (  0, snd $ direction s ) }
-        EventKey (Char 'a') Up   _ _ -> s { direction = (  0, snd $ direction s ) }
+    handle e s@Ship{direction = (xd,yd)} = case e of 
+        EventKey (Char 'w') Down _ _ -> s { direction = ( xd,  1 ) }
+        EventKey (Char 's') Down _ _ -> s { direction = ( xd, -1 ) }
+        EventKey (Char 'd') Down _ _ -> s { direction = (  1, yd ) }
+        EventKey (Char 'a') Down _ _ -> s { direction = ( -1, yd ) }
+        EventKey (Char 'w') Up   _ _ -> s { direction = ( xd,  0 ) }
+        EventKey (Char 's') Up   _ _ -> s { direction = ( xd,  0 ) }
+        EventKey (Char 'd') Up   _ _ -> s { direction = (  0, yd ) }
+        EventKey (Char 'a') Up   _ _ -> s { direction = (  0, yd)  }
         _                            -> s
 
 instance C.Tick Ship where
@@ -65,6 +65,7 @@ instance C.Tick Ship where
         (ng', nb) = shoot np (1,0) tg
         a' = case a of _:ps -> ps ; _ -> []
         in s {bullets = nb ++ tb, pos = np, gun = ng', anim = a' }
+
 instance C.Collidable Ship where
     --size :: Ship ->  (Float,Float)
     size = size
