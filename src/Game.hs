@@ -17,7 +17,7 @@ import Graphics.Gloss.Interface.IO.Game
 data Game   = Playing      { world :: World} 
             | Menu         { menu  :: Menu (IO Game) } 
             -- | Highcores are really the only reason we need to use playIO instead of regular play
-            | HighScores   { mvps  :: IO [(String, Float)]}
+            | HighScores   { mvps  :: [(String, Float)]}
             | NewHighScore { nameWIP :: String, score :: Int}
 
 
@@ -27,7 +27,7 @@ instance Creatable Game where
 mainMenu :: StaticResource -> DynamicResource -> Menu (IO Game)
 mainMenu s d = createMenu [
     ("play game", pure $ Playing w), 
-    ("HighScore", pure $ loadHighScore (readOrCreateFile  "HighScores.txt") ),
+    ("HighScore", loadHighScore (readOrCreateFile  "HighScores.txt") ),
     ("Quit Game", exitSuccess)
     ] where
     w = create s d
@@ -40,13 +40,14 @@ pauseMenu  w = createMenu [
     ]
 
 --loading the highscores
-loadHighScore :: IO String -> Game
+loadHighScore :: IO String -> IO Game
 loadHighScore file= 
-    let scores = do 
+    let list = do 
             file' <- file
             let filelines = lines file'
-            pure $ sortBy (D.comparing $ D.Down . snd) $ map read filelines
-    in HighScores { mvps = scores }
+            let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
+            return $ HighScores { mvps = scores }
+    in list
 
 --write the highscores
 writeHighScore :: Int -> IO String
@@ -62,19 +63,18 @@ readOrCreateFile p = do
     appendFile p ""
     readFile p 
 
-instance PaintIO Game where
+instance Paint Game where
     --paint menu
-    paintIO Menu{ menu = m }         = pure $ paint m
+    paint Menu{ menu = m }           = paint m
     --paint highscores
-    paintIO HighScores{ mvps = ioNames } = do
-        scores <- ioNames
-        let nameandscores = map (\(name, s) -> Text $ name ++ ":" ++ show s) scores
-        let translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
-        let single = color white $ pictures translated
-        return $ translate (-900) 300 single
+    paint HighScores{ mvps = names } = let
+        nameandscores = map (\(name, s) -> Text $ name ++ ":" ++ show s) names
+        translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
+        single = color white $ pictures translated
+        in translate (-900) 300 single
     --paint game
-    paintIO Playing{ world = w } = pure $ paint w
-    paintIO NewHighScore{ nameWIP = n, Game.score = s} =  return $ pictures $ map (color white) [
+    paint Playing{ world = w } = paint w
+    paint NewHighScore{ nameWIP = n, Game.score = s} = pictures $ map (color white) [
         translate (-700) 0      $ text $ "Your Name: \n" ++ n ++ "_", 
         translate (-700) (-250) $ text $ "Your Score: " ++ show s
         ]
@@ -100,15 +100,13 @@ instance HandleIO Game where
         -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
             appendFile "HighScores.txt" $ '\n' : show (n, s)
-            return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
-
+            loadHighScore  (readOrCreateFile  "HighScores.txt")
         _ -> return g
     -- Bossfight WIP
     handleIO _ p = pure p
 
-instance TickIO Game where
-    -- yes scrolling screen during non boss fights
-    tickIO f g@Playing{ world = w } | lives w == 0 =  pure $ NewHighScore {nameWIP = "", Game.score = W.score w}
-                                                         | otherwise    = return $ g{ world = tick f w }
+instance Tick Game where
+    tick f g@Playing{ world = w } | lives w == 0 = NewHighScore {nameWIP = "", Game.score = W.score w}
+                                    | otherwise  =  g{ world = tick f w }
     -- menu/highscore tick doesn't do anything
-    tickIO _ g = pure g  
+    tick _ g = g  
