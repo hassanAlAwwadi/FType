@@ -1,4 +1,4 @@
-{-# LANGUAGE TypeApplications#-}
+{-# LANGUAGE TypeApplications, MultiWayIf #-}
 module World(World, withPlayer2, lives, score, resetWorld, scroll, stat, dyn) where
 
 
@@ -88,13 +88,15 @@ instance Tick World where
         -- damage enemies after the tick event
         (nextRNG, e'', newups) = damageAllEnemies (rng $ dyn w) (ps >>= S.bullets) e'
         ups = newups ++ powerUps w
+        nextDyn = (dyn w){rng = nextRNG}
 
         -- upgrade the player with powerups
         (upgradedPs, remainingUps) = upgradeMulti ps ups []
+        
 
-        enext = if round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 
-               then spawnEnemy (stat w) (dyn w) e''
-               else e''
+        (nextDyn', enext) = if round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 
+               then spawnEnemy (stat w) nextDyn e''
+               else (nextDyn, e'')
 
         -- let enemies move to player1
 
@@ -108,7 +110,7 @@ instance Tick World where
                 enemies = eToP,
                 timer = t,
                 powerUps = remainingUps,
-                dyn = (dyn w){ rng = nextRNG }
+                dyn = nextDyn'
                 }
                  
         in nw 
@@ -157,15 +159,31 @@ replaceDirection e (s:_) = map shipDirection e
 
 replaceDirection e _ = e
 
---spawn 5 enemys with 2 spreadshot enemies with extra life
-spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
-spawnEnemy s d e = e5:e4:e3:e2:e1:e
-            where template = create s d
-                  e1 = template {E.pos = (1000,0) }
-                  e2 = template {E.pos = (1000,-400) ,E.gun = spreadShot, E.health = 3 }
-                  e3 = template {E.pos = (1500,400) ,E.gun = spreadShot, E.health = 3}
-                  e4 = template {E.pos = (1500,700) }
-                  e5 = template {E.pos = (1000,-700) }
+--spawn at most 10 enemys with 2 spreadshot enemies with extra life
+spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> (DynamicResource, [E.Enemy])
+spawnEnemy s d e = let
+    (rval, rng') = randomR (1::Int,100) $ rng d
+    nd = d{rng = rng'}
+    in if   | rval > 99 -> (nd,e9:e8:e7:e6:e5:e4:e3:e2:e1:e)
+            | rval > 88 -> (nd,e8:e7:e6:e5:e4:e3:e2:e1:e)
+            | rval > 77 -> (nd,e7:e6:e5:e4:e3:e2:e1:e)
+            | rval > 66 -> (nd,e6:e5:e4:e3:e2:e1:e)
+            | rval > 55 -> (nd,e5:e4:e3:e2:e1:e)
+            | rval > 44 -> (nd,e4:e3:e2:e1:e)
+            | rval > 33 -> (nd,e3:e2:e1:e)
+            | rval > 22 -> (nd,e2:e1:e)
+            | rval > 11 -> (nd,e1:e)
+            | otherwise -> (nd, e) where 
+                template = create s d
+                e1 = template {E.pos = (1000,0) }
+                e2 = template {E.pos = (1000,-200) ,E.gun = spreadShot, E.health = 3 }
+                e4 = template {E.pos = (1000,200) }
+                e3 = template {E.pos = (1000,400) ,E.gun = spreadShot, E.health = 3}
+                e5 = template {E.pos = (1000,-400) }
+                e7 = template {E.pos = (1000,-600) ,E.gun = spreadShot, E.health = 3 }
+                e6 = template {E.pos = (1000,600) }
+                e8 = template {E.pos = (1000,800) ,E.gun = spreadShot, E.health = 3}
+                e9 = template {E.pos = (1000,-800) }
 
 data WorldState = Paused    { past :: WorldState } 
                 | Scrolling { scrollSpeed :: Float } 
