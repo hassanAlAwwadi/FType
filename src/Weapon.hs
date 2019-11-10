@@ -46,9 +46,8 @@ shoot  p d g
 
 shoot' :: Point -> Vector -> Gun -> [Bullet]
 shoot'  p d Simple    { cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } ]
-shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y+0.15), dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y-0.15), dmg = pw } ]
-
--- | the power ups used to make a gun stronger
+shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw } = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y+0.15), dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y-0.15), dmg = pw } ]
+                                                                
 data PowerUp = PUp { pos :: Point } -- Simple power up
              | SUp { pos :: Point } -- Spreadshot power up
              | BUp { pos :: Point } -- Bomb + 1
@@ -63,7 +62,7 @@ instance Paint PowerUp where
             BUp{pos = xy} -> ("B+1",xy)
 
 instance Collidable PowerUp where
-    size _ = (1,1)
+    size _ = (60,20)
     position = pos
     repos l p = p{pos = l}
     reposChildren _ = id
