@@ -68,8 +68,8 @@ instance Collidable PowerUp where
 
 randomPowerUp :: Int -> Point -> Maybe PowerUp
 randomPowerUp randomVal point
-    | randomVal <= 20 = Just $ PUp point
-    | randomVal <= 40 = Just $ SUp point
+    | randomVal <= 15 = Just $ PUp point
+    | randomVal <= 30 = Just $ SUp point
     | otherwise       = Nothing
 
 -- power up your gun when you pick up a upgrade

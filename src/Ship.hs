@@ -82,7 +82,7 @@ instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship
     tick f s@Ship{pos = p, speed = v, direction = d, gun = g, bullets =  bs, borders = bo, anim = a} = let 
         np = C.reBorder bo (p L.+ v L.* d)
-        tb = C.tick f bs
+        tb = filter (not . C.outOfBorder bo) $ C.tick f bs
         tg = C.tick f g
         (ng', nb) = shoot np (1,0) tg
         a' = case a of _:ps -> ps ; _ -> []
