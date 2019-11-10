@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module Weapon(PowerUp(..), Gun(..) , Bullet, shoot, simple, simpleShip, spreadShot, dmg, powerUp, randomPowerUp) where
+module Weapon(PowerUp(..), Gun(..) , Bullet, shoot, simple, spreadShot, dmg, powerUp, randomPowerUp) where
 
 import Classess
 import Graphics.Gloss
@@ -16,9 +16,8 @@ instance Tick Gun where
     tick f g = g{countdown = countdown g - f}
 
 -- | the "level 1" specs of the three weapon types
-simple, simpleShip, spreadShot :: Gun
+simple, spreadShot :: Gun
 simple     = Simple     {cal = 5, power = 1, speed = 8, cooldown = 1, countdown = 1 }
-simpleShip = Simple     {cal = 10, power = 1, speed = 11, cooldown = 0.6, countdown = 1 }
 spreadShot = SpreadShot {cal = 7, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 1, angle = 0.3 }
 
 
@@ -77,5 +76,5 @@ powerUp :: Gun -> PowerUp -> Gun
 powerUp g@Simple    { power = p, cal = c} PUp{}       = g{ cal = c *1.3, power = p * 1.5 }
 powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
 -- gun and powerup don't match -> gun gets reset
-powerUp _  PUp{} = simpleShip
+powerUp _  PUp{} = simple
 powerUp _  SUp{} = spreadShot
