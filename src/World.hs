@@ -12,7 +12,7 @@ import Graphics.Gloss.Data.Vector
 import Classess
 import Resources
 
-import qualified Ship as S(Ship, bullets, powerUp,pos, p2c, controls)
+import qualified Ship as S(Ship, bullets, powerUp,pos, player2)
 import qualified Enemy as E (Enemy,Enemy(GraveMarker),gun,health, bullets, damage, deadly,direction,pos, cullTarget)
 import Weapon(Bullet, PowerUp, dmg,spreadShot)
 
@@ -44,11 +44,11 @@ instance Creatable World where
     }
 
 withPlayer2 :: World -> World 
-withPlayer2 w@World{stat = s, dyn = d} = w{players = [create s d, repos (0,100) $ (create s d){S.controls = S.p2c}]}
+withPlayer2 w@World{stat = s, dyn = d} = w{players = [create s d, repos (0,100) $ S.player2 (create s d)]}
 
 resetWorld :: World -> World
 resetWorld w@World{stat = s, dyn = d} = w{
-    players = case players w of [_] -> [create s d] ; [_, _] -> [create s d, repos (0,100) $ (create s d){S.controls = S.p2c}] ; _ -> [],
+    players = case players w of [_] -> [create s d] ; [_, _] -> [create s d, repos (0,100) $ S.player2 (create s d)] ; _ -> [],
     enemies = [],
     lives = 3,
     level = 0,
@@ -143,7 +143,7 @@ damageAllEnemies seed bs es =
 
 --redirects the enemies to the player
 replaceDirection :: [E.Enemy] -> [S.Ship] -> [E.Enemy]
-replaceDirection e [s] = map shipDirection e
+replaceDirection e (s:_) = map shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
                           shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
@@ -155,7 +155,6 @@ replaceDirection e [s] = map shipDirection e
                                            | otherwise     = d
                                         where maxAngle' = 0.8
 
-replaceDirection e (s:_) = replaceDirection e [s]
 replaceDirection e _ = e
 
 --spawn 5 enemys with 2 spreadshot enemies with extra life
