@@ -8,9 +8,9 @@ data Menu a = Menu { menuItems :: [(String, a)], maxSelected :: Int, selected ::
 
 instance Paint (Menu a) where
     paint Menu {selected = s, menuItems = items} = 
-        let menuSelector = translate 400 (fromIntegral $ 50 + s * (-250)) $ color yellow $ rectangleWire 900 200
-            labels = uncurry (translate 0) <$> zip [0, (-250)..] (map (color white . text . fst) items)
-        in  translate (-50) 250 $ Pictures (menuSelector : labels)
+        let menuSelector = translate 375 (fromIntegral $ 25 +  s * (-200)) $ color yellow $ rectangleWire 800 175
+            labels = uncurry (translate 0)  <$> zip [0, (-200)..] (map (scale 0.7 0.7 . color white . text . fst) items)
+        in  translate 0 400 $ Pictures (menuSelector : labels)
 
 instance Handle (Menu a) where
     handle e m@Menu{selected = s, maxSelected = ms} =  case e of 

@@ -1,7 +1,7 @@
-module Ship(Ship, bullets,Ship.powerUp, pos, p1c, p2c, controls) where
+module Ship(Ship, bullets, Ship.powerUp, pos, player2) where
 
 import qualified Classess as C
-import Resources(Border, playerShip, border)
+import Resources(StaticResource, Border, player1Ship, player2Ship, border)
 import Graphics.Gloss
 import Weapon as W(Gun,Bullet, PowerUp, simpleShip, shoot, powerUp) 
 import Graphics.Gloss.Interface.IO.Game
@@ -18,8 +18,12 @@ data Ship = Ship {
     size :: (Float,Float),
     borders :: Border,
     controls :: Event -> Ship -> Ship,
-    anim :: [Picture]
+    anim :: [Picture],
+    stat :: StaticResource
 } 
+
+player2 ::  Ship -> Ship
+player2 s@Ship{stat = st} = s{anim = cycle $ player2Ship st, controls = p2c} 
 
 p1c :: Event -> Ship -> Ship
 p1c e s@Ship{direction = (xd,yd)} = case e of   
@@ -56,7 +60,8 @@ instance C.Creatable Ship where
         size = (40,20),
         borders = border s,
         controls = p1c,
-        anim = cycle $ playerShip s
+        anim = cycle $ player1Ship s,
+        stat = s
     } 
 
 powerUp :: Ship -> PowerUp -> Ship
