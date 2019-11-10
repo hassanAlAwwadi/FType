@@ -95,14 +95,13 @@ instance HandleIO Game where
     --WriteHighScore 
     handleIO e g@NewHighScore{ nameWIP = n, Game.score = s} = case e of 
         EventKey (Char '\b') Down _ _ -> return $ g{ nameWIP = take (length n -1) n}
-        EventKey (Char c) Down _ _ -> if isAlphaNum c then return $ g{ nameWIP = n ++ [c]} else return $ g{ nameWIP = n }
+        EventKey (Char c) Down _ _ -> return $ if isAlphaNum c then g{ nameWIP = n ++ [c]} else g
         EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
             appendFile "HighScores.txt" $ '\n' : show (n, s)
             return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
 
-        EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
         _ -> return g
     -- Bossfight WIP
     handleIO _ p = pure p
