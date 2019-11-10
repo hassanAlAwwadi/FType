@@ -170,6 +170,16 @@ spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> (DynamicResource
 spawnEnemy s d e = let
     (rval, rng') = randomR (1::Int,100) $ rng d
     nd = d{rng = rng'}
+    template = create s d
+    e1 = template {E.pos = (1000,0) }
+    e2 = template {E.pos = (1000,-200) ,E.gun = spreadShot, E.health = 3 }
+    e4 = template {E.pos = (1000,200) }
+    e3 = template {E.pos = (1000,400) ,E.gun = spreadShot, E.health = 3}
+    e5 = template {E.pos = (1000,-400) }
+    e7 = template {E.pos = (1000,-600) ,E.gun = spreadShot, E.health = 3 }
+    e6 = template {E.pos = (1000,600) }
+    e8 = template {E.pos = (1000,800) ,E.gun = spreadShot, E.health = 3}
+    e9 = template {E.pos = (1000,-800) }
     in if   | rval > 99 -> (nd,e9:e8:e7:e6:e5:e4:e3:e2:e1:e)
             | rval > 88 -> (nd,e8:e7:e6:e5:e4:e3:e2:e1:e)
             | rval > 77 -> (nd,e7:e6:e5:e4:e3:e2:e1:e)
@@ -179,17 +189,8 @@ spawnEnemy s d e = let
             | rval > 33 -> (nd,e3:e2:e1:e)
             | rval > 22 -> (nd,e2:e1:e)
             | rval > 11 -> (nd,e1:e)
-            | otherwise -> (nd, e) where 
-                template = create s d
-                e1 = template {E.pos = (1000,0) }
-                e2 = template {E.pos = (1000,-200) ,E.gun = spreadShot, E.health = 3 }
-                e4 = template {E.pos = (1000,200) }
-                e3 = template {E.pos = (1000,400) ,E.gun = spreadShot, E.health = 3}
-                e5 = template {E.pos = (1000,-400) }
-                e7 = template {E.pos = (1000,-600) ,E.gun = spreadShot, E.health = 3 }
-                e6 = template {E.pos = (1000,600) }
-                e8 = template {E.pos = (1000,800) ,E.gun = spreadShot, E.health = 3}
-                e9 = template {E.pos = (1000,-800) }
+            | otherwise -> (nd, e) 
+
 
 data WorldState = Paused    { past :: WorldState } 
                 | Scrolling { scrollSpeed :: Float } 
