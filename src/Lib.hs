@@ -19,4 +19,6 @@ someFunc = do
     -- initial game 
     let initialGame = create st (DynamicResource seed) :: Game
     -- "smart" constructor of menu is used to create the main menu
-    playIO FullScreen black 30 initialGame paintIO handleIO tickIO
+    playIO FullScreen black 30 initialGame paintA handleIO tickA
+
+ 

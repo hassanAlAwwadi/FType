@@ -2,3 +2,4 @@
 ("stefan",300)
 ("ik ben zo slecht",-300)
 ("hassan",18)
+("hasn",15)
