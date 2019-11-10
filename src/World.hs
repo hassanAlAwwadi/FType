@@ -145,9 +145,17 @@ damageAllEnemies seed bs es =
 
 --redirects the enemies to the player
 replaceDirection :: [E.Enemy] -> [S.Ship] -> [E.Enemy]
-replaceDirection e (s:_) = map shipDirection e
+replaceDirection e s = map replaceDirection' (zip e (map lowestDistShip e))
+                            --find the closest ship for all enemies
+                        where lowestDistShip e' = snd (minimum (zip (map (distance (E.pos e'))  (map S.pos s)) (map S.pos s)))
+                              distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
+                               where x' = x1 - x2
+                                     y' = y1 - y2
+
+replaceDirection' :: (E.Enemy, Point) -> E.Enemy
+replaceDirection' (e,sp) = shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
-                          shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') (S.pos s))) }
+                          shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') sp)) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
                           --don't let ships move backward or upward, only forward with a max upward angle of 80%
@@ -156,8 +164,6 @@ replaceDirection e (s:_) = map shipDirection e
                                            | y< -maxAngle' =  (-1,-maxAngle')
                                            | otherwise     = d
                                         where maxAngle' = 0.8
-
-replaceDirection e _ = e
 
 --spawn at most 10 enemys with 2 spreadshot enemies with extra life
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> (DynamicResource, [E.Enemy])
