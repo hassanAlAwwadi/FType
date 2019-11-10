@@ -120,18 +120,21 @@ damageAllEnemies seed bs es =
         go (e, float) (gen, eacc, pacc) = let (gen', (en, pu)) = E.damage e float gen in (gen', en:eacc, maybe pacc (:pacc) pu)
     in  foldr go (seed, [], []) enemyDamage 
 
+--redirects the enemies to the player
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
 replaceDirection e s = map shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
                           shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
+                          --don't let ships move backward or upward, only forward with a max upward angle of 80%
                           maxAngle d@(x,y) | x>0           =  (-1,y)
                                            | y> maxAngle'  =  (-1,maxAngle')
                                            | y< -maxAngle' =  (-1,-maxAngle')
                                            | otherwise     = d
                                         where maxAngle' = 0.8
 
+--spawn 5 enemys with 2 spreadshot enemies with extra life
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
 spawnEnemy s d e = e5:e4:e3:e2:e1:e
             where template = create s d
