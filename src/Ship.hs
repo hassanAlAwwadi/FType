@@ -35,8 +35,9 @@ powerUp :: Ship -> PowerUp -> Ship
 powerUp s p = s{ gun = W.powerUp (gun s) p}
 
 instance C.Paint Ship where
-    paint Ship{ pos = (x,y), bullets = b, size = (sx,sy), anim = p:_ } =  
+    paint Ship{ pos = (x,y), bullets = b, size = (sx,sy), anim = as} =  
         let pb = C.paint b
+            p = case as of a:_ -> a ; _ -> color blue $ rectangleSolid sx sy 
             ps = translate x y p 
         in pictures [ps,pb] where 
 
@@ -55,13 +56,13 @@ instance C.Handle Ship where
 
 instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@Ship{pos = p, speed = v, direction = d, gun = g, bullets =  bs, anim = _:ps} = let 
+    tick f s@Ship{pos = p, speed = v, direction = d, gun = g, bullets =  bs, anim = a} = let 
         np =  p L.+ v L.* d
         tb = C.tick f bs
         tg = C.tick f g
         (ng', nb) = shoot np (1,0) tg
-        in s {bullets = nb ++ tb, pos = np, gun = ng', anim = ps }
-
+        a' = case a of _:ps -> ps ; _ -> []
+        in s {bullets = nb ++ tb, pos = np, gun = ng', anim = a' }
 instance C.Collidable Ship where
     --size :: Ship ->  (Float,Float)
     size = size

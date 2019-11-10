@@ -102,11 +102,7 @@ instance HandleIO Game where
             appendFile "HighScores.txt" $ '\n' : show (n, s)
             return $  loadHighScore  (readOrCreateFile  "HighScores.txt")
 
-        EventKey (Char '\b') Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
         EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = case n of [] -> [] ; _ -> init n}
-
-        EventKey (Char c) Down _ _ -> return $ g{ nameWIP = n ++ [c]}
-        EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         _ -> return g
     -- Bossfight WIP
     handleIO _ p = pure p
