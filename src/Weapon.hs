@@ -6,9 +6,10 @@ import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
 data Gun = Simple     { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, speed :: Float } 
-         | SpreadShot { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, speed :: Float,  amount :: Int, angle :: Int } 
-      -- WIP: A lot different from the other two guns.
-      -- | Laser      { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, lifespan :: Float} 
+        -- | amount represents the amount of sideshots. so 1 -> 3 bullets total. 2 -> 5 bullets total. 3 -> 7 bullets total 
+         | SpreadShot { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, speed :: Float,  amount :: Int, angle :: Float } 
+        -- WIP: A lot different from the other two guns.
+        -- Laser      { cal :: Float, power :: Float, cooldown :: Float, countdown :: Float, lifespan :: Float} 
          deriving (Read, Show)
 
 instance Tick Gun where
@@ -17,8 +18,8 @@ instance Tick Gun where
 -- | the "level 1" specs of the three weapon types
 simple, simpleShip, spreadShot :: Gun
 simple     = Simple     {cal = 5, power = 1, speed = 8, cooldown = 1, countdown = 1 }
-simpleShip     = Simple     {cal = 10, power = 1, speed = 11, cooldown = 0.6, countdown = 1 }
-spreadShot = SpreadShot {cal = 7, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 3, angle = 15 }
+simpleShip = Simple     {cal = 10, power = 1, speed = 11, cooldown = 0.6, countdown = 1 }
+spreadShot = SpreadShot {cal = 7, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 1, angle = 0.3 }
 
 
 data Bullet = Bullet    { size :: Float , pos :: Point, speed :: Float, direction :: Vector, dmg :: Float } deriving(Show, Read)
@@ -46,7 +47,7 @@ shoot  p d g
 
 shoot' :: Point -> Vector -> Gun -> [Bullet]
 shoot'  p d Simple    { cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } ]
-shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw } = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y+0.15), dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y-0.15), dmg = pw } ]
+shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw, amount = am, angle = an } = [ Bullet { size = c, pos = p, speed = s, direction = (x,y + fromIntegral d *  an ), dmg = pw }   | d <- [-am..am]]
                                                                 
 data PowerUp = PUp { pos :: Point } -- Simple power up
              | SUp { pos :: Point } -- Spreadshot power up
@@ -73,8 +74,8 @@ randomPowerUp randomVal point
 
 -- power up your gun when you pick up a upgrade
 powerUp :: Gun -> PowerUp -> Gun
-powerUp g@Simple    { power = p}                PUp{} = g{ power = p * 1.2 }
-powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1 }
+powerUp g@Simple    { power = p}                PUp{} = g{ power = p * 1.5 }
+powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
 -- gun and powerup don't match -> gun gets reset
 powerUp _  PUp{} = simple
 powerUp _  SUp{} = spreadShot
