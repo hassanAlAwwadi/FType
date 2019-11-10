@@ -4,6 +4,7 @@ import System.Exit(exitSuccess)
 import System.IO (readFile) 
 import Data.Maybe as M(fromMaybe)
 import Data.List as S(sortBy) 
+import Data.Char
 import qualified Data.Ord as D (Down(..), comparing) 
 
 import Classess as C
@@ -85,7 +86,8 @@ instance HandleIO Game where
     
     --WriteHighScore 
     handleIO e g@NewHighScore{ nameWIP = n, Game.score = s} = case e of 
-        EventKey (Char c) Down _ _ -> return $ g{ nameWIP = n ++ [c]}
+        EventKey (Char '\b') Down _ _ -> return $ g{ nameWIP = take (length n -1) n}
+        EventKey (Char c) Down _ _ -> if isAlphaNum c then return $ g{ nameWIP = n ++ [c]} else return $ g{ nameWIP = n }
         EventKey (SpecialKey KeySpace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         -- WIP: EventKey (SpecialKey KeyBackspace) Down _ _ -> return $ g{nameWIP = n ++ " "}
         EventKey (SpecialKey KeyEnter) Down _ _ -> do
