@@ -3,7 +3,7 @@ module Ship(Ship, bullets, Ship.powerUp, pos, player2) where
 import qualified Classess as C
 import Resources(StaticResource, Border, player1Ship, player2Ship, border)
 import Graphics.Gloss
-import Weapon as W(Gun,Bullet, PowerUp, simpleShip, shoot, powerUp) 
+import Weapon as W(Gun,Bullet, PowerUp,  simple, shoot, powerUp) 
 import Graphics.Gloss.Interface.IO.Game
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 
@@ -54,7 +54,7 @@ instance C.Creatable Ship where
         pos = (-420,0), 
         speed = 13, 
         direction = (0,0), 
-        gun = simpleShip, 
+        gun = simple, 
         bullets = [], 
         bombs = 0, 
         size = (40,20),
