@@ -1,6 +1,6 @@
 {-# LANGUAGE DuplicateRecordFields, InstanceSigs #-}
 module Lib
-    ( someFunc
+    ( playGame
     ) where
 
 import Graphics.Gloss
@@ -10,8 +10,8 @@ import Classess
 import Game as G
 import Resources
 
-someFunc :: IO ()
-someFunc = do
+playGame :: IO ()
+playGame = do
     -- get static resource
     st <- getStaticResource
     -- get seed

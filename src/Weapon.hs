@@ -47,7 +47,7 @@ shoot  p d g
 shoot' :: Point -> Vector -> Gun -> [Bullet]
 shoot'  p d Simple{ cal = c, speed = s, power = pw, gcolor = gc}  = 
     [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw, bcolor = gc } ]
-shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw, amount = am, angle = an,gcolor = gc } =
+shoot'  p (x,y) SpreadShot{ cal = c, speed = s, power = pw, amount = am, angle = an,gcolor = gc } =
      [ Bullet { size = c, pos = p, speed = s, direction = (x,y + fromIntegral d *  an ), dmg = pw, bcolor = gc }   | d <- [-am..am]]
                                                                 
 data PowerUp = PUp { pos :: Point } -- Simple power up
