@@ -50,7 +50,6 @@ shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw } = [Bullet { size 
                                                                 
 data PowerUp = PUp { pos :: Point } -- Simple power up
              | SUp { pos :: Point } -- Spreadshot power up
-             | BUp { pos :: Point } -- Bomb + 1
               deriving(Show, Read)
 
 
@@ -59,19 +58,17 @@ instance Paint PowerUp where
         (t,(x,y)) = case p of 
             PUp{pos = xy} -> ("PUp",xy)
             SUp{pos = xy} -> ("SUp",xy)
-            BUp{pos = xy} -> ("B+1",xy)
 
 instance Collidable PowerUp where
-    size _ = (60,20)
+    size _ = (60,60)
     position = pos
     repos l p = p{pos = l}
     reposChildren _ = id
 
 randomPowerUp :: Int -> Point -> Maybe PowerUp
 randomPowerUp randomVal point
-    | randomVal <= 5  = Just $ PUp point
-    | randomVal <= 10 = Just $ SUp point
-    | randomVal <= 15 = Just $ BUp point
+    | randomVal <= 20 = Just $ PUp point
+    | randomVal <= 40 = Just $ SUp point
     | otherwise       = Nothing
 
 -- power up your gun when you pick up a upgrade
@@ -81,5 +78,3 @@ powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amo
 -- gun and powerup don't match -> gun gets reset
 powerUp _  PUp{} = simple
 powerUp _  SUp{} = spreadShot
--- Life +1 or bomb don't affect the gun
-powerUp g _ = g
