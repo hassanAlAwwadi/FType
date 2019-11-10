@@ -13,7 +13,7 @@ import Classess
 import Resources
 
 import qualified Ship as S(Ship, bullets, powerUp,pos)
-import qualified Enemy as E (Enemy,Enemy(GraveMarker),gun,health, bullets, damage, deadly,direction,pos)
+import qualified Enemy as E (Enemy,Enemy(GraveMarker),gun,health, bullets, damage, deadly,direction,pos, cullTarget)
 import Weapon(Bullet, PowerUp, dmg,spreadShot)
 
 data World = World {
@@ -80,7 +80,7 @@ instance Tick World where
         t = timer (w::World) + f
 
         -- remove enemies that have gone out of the border range
-        e' =  filter (not . pastBorder (border $ stat w)) e
+        e' =  filter (not . E.cullTarget) e
         -- damage enemies after the tick event
         (nextRNG, e'', newups) = damageAllEnemies (rng $ dyn w) (S.bullets p) e'
         ups = newups ++ powerUps w
@@ -91,6 +91,7 @@ instance Tick World where
 
         e''' | round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 = spawnEnemy (stat w) (dyn w) e''
              | otherwise = e''
+
         -- let enemies move to player
         eToP =  replaceDirection e''' upgradedP
         -- reset world if player is hit
