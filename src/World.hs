@@ -45,6 +45,8 @@ instance Creatable World where
     
 resetWorld :: World -> World
 resetWorld w@World{stat = stat, dyn = dyn} = w{
+    player = create stat dyn,
+    enemies = [],
     lives = 3,
     level = 0,
     timer = 0,
