@@ -71,7 +71,7 @@ instance Paint Game where
         nameandscores = map (\(name, s) -> scale 0.6 0.6 $ Text $ name ++ ":" ++ show s) names
         translated = uncurry (translate 0) <$> zip [0, (-200)..] nameandscores
         single = color white $ pictures translated
-        in translate (-900) (sd + 400) single
+        in translate 0 (sd + 400) single
     --paint game
     paint Playing{ world = w } = paint w
     paint NewHighScore{ nameWIP = n, score = s} = pictures $ map (color white) [

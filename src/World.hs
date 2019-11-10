@@ -61,12 +61,12 @@ scroll :: Float -> World -> World
 scroll xdelta w@World { enemies = e } = w{ enemies = map (reposWithChildren (xdelta, 0)) e }
 
 instance Paint World where
-    paint World{players = p, enemies = es, powerUps = pus, timer = t} = let 
+    paint World{players = p, difficulty = d, lives = l, score = s, enemies = es, powerUps = pUs, timer = t} = let 
         pw = paint p
         pe = paint es
-        pu = paint pus
+        pu = paint pUs
         --type app used to prevent defaulting of show
-        pt = translate 0 400 . color white . text . show @ Integer $ floor t 
+        pt = translate (-900) 400 . color white . text $ "T:" ++ show @ Integer (floor t) ++ " L:" ++ show l ++ " S:" ++ show (s+ floor t) ++ " D:" ++ show d
         in pictures [pw, pt, pu, pe]
 
 
@@ -100,7 +100,7 @@ instance Tick World where
         
 
         -- spawn enemies
-        (nextDyn', enext) = if round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 
+        (nextDyn', enext) = if round t `mod` 4 == 0 && round (timer (w::World)) `mod` 4 /= 0 
                then spawnEnemy (stat w) nextDyn newDifficulty e''
                else (nextDyn, e'')
 
@@ -176,16 +176,16 @@ replaceDirection' (e,sp) = shipDirection e
 spawnEnemy :: StaticResource -> DynamicResource -> Int -> [E.Enemy] -> (DynamicResource, [E.Enemy])
 spawnEnemy s d n e = go d e n n where 
     go :: DynamicResource -> [E.Enemy] -> Int -> Int -> (DynamicResource, [E.Enemy])
-    go gd ge (-1) _ = (gd, ge)
+    go gd ge (-1) _ = (gd{rng = snd $ next $ rng gd}, ge)
     go gd ge gn gl 
-        | evenN && rval > 75 = (gd', spread  {E.pos = (1000,700 * rval/100 )   } :ge')
-        | evenN && rval > 50 = (gd', spread  {E.pos = (1000,(-700) * rval/100) } :ge')
-        | rval > 75          = (gd', regular {E.pos = (1000,700 * rval/100) }    :ge')
-        | rval > 50          = (gd', regular {E.pos = (1000,(-700) * rval/100) } :ge')
+        | rval > 87.5 = (gd'', spread  {E.pos = (1000,700 * rval/100 )   } :ge')
+        | rval > 75   = (gd'', regular {E.pos = (1000,(-700) * rval/100) } :ge')
+        | rval > 62.5 = (gd'', spread  {E.pos = (1000,(-700) * rval/100) } :ge')
+        | rval > 50   = (gd'', regular {E.pos = (1000,700 * rval/100) }    :ge')
         | otherwise = (gd', ge') where
         (rval, rng') = randomR (0::Float,100) $ rng gd
-        (gd', ge') = go gd{rng = rng'} ge (gn-1) gl
-        evenN = even n      
+        gd' = gd{rng = rng'}
+        (gd'', ge') = go gd' ge (gn-1) gl
         regular = (create s gd'){E.health = fromIntegral gl}
         spread = regular {E.gun = spreadShot, E.health = fromIntegral gl * 1.3 }
     
