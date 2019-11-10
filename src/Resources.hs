@@ -6,10 +6,20 @@ import Graphics.Gloss.Interface.Environment
 import System.Random(StdGen, newStdGen)
 
 -- | resources that will stay the same throughout the games lifespan
-data StaticResource = StaticResource   { explosion :: [Picture], border::Border }
+data StaticResource = StaticResource   { explosion :: [Picture], playerShip :: [Picture], border::Border }
 
-getExplosions :: Int -> IO [Picture]
-getExplosions lifespan = mapM loadBMP ["explosion/explosion_" ++ show n ++ ".bmp" |  n <- [1..12]::[Int], _ <- [1.. max 1 $ lifespan `div` 12] ]
+getStaticResource :: IO StaticResource
+getStaticResource = do
+    ex <- getExplosions
+    pl <- getPlayerShip
+    bo <- getBorders
+    pure $ StaticResource { explosion = ex, playerShip = pl, border = bo}
+
+getExplosions :: IO [Picture]
+getExplosions = mapM loadBMP ["explosion/explosion_" ++ show n ++ ".bmp" |  n <- [1..12::Int]]
+
+getPlayerShip :: IO [Picture]
+getPlayerShip = mapM loadBMP ["ship/ship_" ++ show n ++ ".bmp" | n <- [1..4::Int]]
 
 data Border = Border { xmax, ymax, xmin, ymin::Float } deriving Show
 
