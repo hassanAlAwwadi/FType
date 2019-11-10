@@ -75,8 +75,8 @@ randomPowerUp randomVal point
 
 -- power up your gun when you pick up a upgrade
 powerUp :: Gun -> PowerUp -> Gun
-powerUp g@Simple    { power = p, cal = c} PUp{}       = g{ cal = c *1.3, power = p * 1.5 }
-powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
+powerUp g@Simple    { power = p, cal = c} PUp{}       = g{ cal = c *1.4, power = p * 1.5 }
+powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.25, amount = a + 1, angle = 0.9/ fromIntegral a}
 -- gun and powerup don't match -> gun gets reset
 powerUp _  PUp{} = simple{gcolor = blue}
 powerUp _  SUp{} = spreadShot{gcolor = blue}

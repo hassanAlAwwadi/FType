@@ -8,3 +8,6 @@
 ("Stefandesunya",64)
 ("aaa",100)
 ("gg",182)
+("myname",132)
+("sup",116)
+("rip me",169)
