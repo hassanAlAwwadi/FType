@@ -13,8 +13,8 @@ import Classess
 import Resources
 
 import qualified Ship as S(Ship, bullets, powerUp,pos)
-import qualified Enemy as E (Enemy,Enemy(GraveMarker), bullets, damage, deadly,direction,pos)
-import Weapon(Bullet, PowerUp, dmg)
+import qualified Enemy as E (Enemy,Enemy(GraveMarker),gun, bullets, damage, deadly,direction,pos)
+import Weapon(Bullet, PowerUp, dmg,spreadShot)
 
 data World = World {
     player :: S.Ship, 
@@ -128,8 +128,8 @@ spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
 spawnEnemy stat dyn e = e5:e4:e3:e2:e1:e
             where template = create stat dyn
                   e1 = template {E.pos = (1000,0) }
-                  e2 = template {E.pos = (1000,-400) }
-                  e3 = template {E.pos = (1500,400) }
+                  e2 = template {E.pos = (1000,-400) ,E.gun = spreadShot }
+                  e3 = template {E.pos = (1500,400) ,E.gun = spreadShot}
                   e4 = template {E.pos = (1500,700) }
                   e5 = template {E.pos = (1000,-700) }
 

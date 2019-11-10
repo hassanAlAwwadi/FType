@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module Weapon(PowerUp(..), Gun, Bullet, shoot, simple, dmg, powerUp, randomPowerUp) where
+module Weapon(PowerUp(..), Gun, Bullet, shoot, simple, spreadShot, dmg, powerUp, randomPowerUp) where
 
 import Classess
 import Graphics.Gloss
@@ -16,7 +16,7 @@ instance Tick Gun where
 
 -- | the "level 1" specs of the three weapon types
 simple, spreadShot :: Gun
-simple     = Simple     {cal = 10, power = 1, speed = 8, cooldown = 0.5, countdown = 0.5 }
+simple     = Simple     {cal = 10, power = 1, speed = 8, cooldown = 1, countdown = 1 }
 spreadShot = SpreadShot {cal = 10, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 3, angle = 15 }
 
 
@@ -45,7 +45,7 @@ shoot  p d g
 
 shoot' :: Point -> Vector -> Gun -> [Bullet]
 shoot'  p d Simple    { cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } ]
-shoot'  p d SpreadShot{ cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } ]
+shoot'  p d@(x,y) SpreadShot{ cal = c, speed = s, power = pw }  = [Bullet { size = c, pos = p, speed = s, direction = d, dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y+0.15), dmg = pw } , Bullet { size = c, pos = p, speed = s, direction = (x,y-0.15), dmg = pw } ]
 
 -- | the power ups used to make a gun stronger
 data PowerUp = PUp { pos :: Point } -- Simple power up
