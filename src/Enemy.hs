@@ -3,7 +3,7 @@ module Enemy where
 
 import Resources(explosion, Border, border)
 import qualified Classess as C 
-import Weapon(Gun, Bullet, PowerUp, simple, shoot, randomPowerUp)
+import Weapon as G (Gun(..), Bullet, PowerUp, simple, shoot, randomPowerUp)
 import Graphics.Gloss
 import qualified Graphics.Gloss.Data.Point.Arithmetic as L
 import System.Random
@@ -34,17 +34,19 @@ cullTarget e@Enemy{cullRange = bo, bullets = b} = C.pastBorder bo e && all (C.pa
 cullTarget _ = False
 
 instance C.Paint Enemy where
-    paint Enemy{ size = s, pos = (x,y), bullets = b } = let
+    paint Enemy{ size = s, pos = (x,y), bullets = b, gun = g} = let
          pb = C.paint b
          pe = translate x y enemyDrawing 
          in pictures [pe,pb] where 
-         enemyDrawing = color red $ rectangleSolid s s 
+         enemyDrawing = color (c g) $ rectangleSolid s s 
+          where c (G.Simple _ _ _ _ _)        = red
+                c (G.SpreadShot _ _ _ _ _ _ _)    = green
     paint GraveMarker{bullets = b, pos = (x,y), deathAnim = p:_} = pictures [translate x y $ scale 0.5 0.5 p, C.paint b]
     paint GraveMarker{bullets = b} = C.paint b
 
 instance C.Tick Enemy where
     --tick :: Float -> Enemy -> IO Enemy
-    tick f e@Enemy{ pos = p, speed = v, direction = d, gun = g, bullets = b} = let
+    tick f e@Enemy{ pos = p, Enemy.speed = v, direction = d, gun = g, bullets = b} = let
         tb = C.tick f b
         tg = C.tick f g
         (sg, nb) = shoot  p d  tg
@@ -69,7 +71,7 @@ instance C.Creatable Enemy where
     create stat _ = Enemy{ 
         Enemy.size = 20, 
         pos = (10,10), 
-        speed = 5, 
+        Enemy.speed = 5, 
         direction = (0,0), 
         health = 1, 
         gun = simple, 

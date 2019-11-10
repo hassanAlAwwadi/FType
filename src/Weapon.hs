@@ -1,5 +1,5 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-module Weapon(PowerUp(..), Gun , Bullet, shoot, simple, simpleShip, spreadShot, dmg, powerUp, randomPowerUp) where
+module Weapon(PowerUp(..), Gun(..) , Bullet, shoot, simple, simpleShip, spreadShot, dmg, powerUp, randomPowerUp) where
 
 import Classess
 import Graphics.Gloss
