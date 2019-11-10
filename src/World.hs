@@ -143,15 +143,13 @@ damageAllEnemies seed bs es =
 
 --redirects the enemies to the player
 replaceDirection :: [E.Enemy] -> [S.Ship] -> [E.Enemy]
-
 replaceDirection e s = map replaceDirection' (zip e (map lowestDistShip e))
+                            --find the closest ship for all enemies
                         where lowestDistShip e' = snd (minimum (zip (map (distance (E.pos e'))  (map S.pos s)) (map S.pos s)))
                               distance (x1 , y1) (x2 , y2) = sqrt (x'*x' + y'*y')
                                where x' = x1 - x2
                                      y' = y1 - y2
-                              
-replaceDirection e (s:_) = replaceDirection e [s]
-replaceDirection e _ = e
+
 replaceDirection' :: (E.Enemy, Point) -> E.Enemy
 replaceDirection' (e,sp) = shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
