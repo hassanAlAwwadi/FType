@@ -67,14 +67,14 @@ instance Collidable PowerUp where
 
 randomPowerUp :: Int -> Point -> Maybe PowerUp
 randomPowerUp randomVal point
-    | randomVal <= 20 = Just $ PUp point
-    | randomVal <= 40 = Just $ SUp point
+    | randomVal <= 15 = Just $ PUp point
+    | randomVal <= 30 = Just $ SUp point
     | otherwise       = Nothing
 
 -- power up your gun when you pick up a upgrade
 powerUp :: Gun -> PowerUp -> Gun
-powerUp g@Simple    { power = p , speed = s, cal = c, cooldown = co}  PUp{} = g{ power = p * 1.5 , speed = s*1.3 , cal = c*1.2, cooldown = co*0.8 }
-powerUp g@SpreadShot{ power = p, amount = a}    SUp{}                       = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
+powerUp g@Simple    { power = p, cal = c} PUp{}       = g{ cal = c *1.3, power = p * 1.5 }
+powerUp g@SpreadShot{ power = p, amount = a}    SUp{} = g{ power = p * 1.05, amount = a + 1, angle = 0.9/ fromIntegral a}
 -- gun and powerup don't match -> gun gets reset
-powerUp _  PUp{} = simple
+powerUp _  PUp{} = simpleShip
 powerUp _  SUp{} = spreadShot
