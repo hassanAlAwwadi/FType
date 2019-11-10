@@ -1,7 +1,7 @@
 module Ship(Ship, bullets, Ship.powerUp, pos) where
 
 import qualified Classess as C
-import Resources(playerShip)
+import Resources(Border, playerShip, border)
 import Graphics.Gloss
 import Weapon as W(Gun,Bullet, PowerUp, simpleShip, shoot, powerUp) 
 import Graphics.Gloss.Interface.IO.Game
@@ -16,6 +16,7 @@ data Ship = Ship {
     bullets :: [Bullet],
     bombs :: Int,
     size :: (Float,Float),
+    borders :: Border,
     anim :: [Picture]
 } deriving (Show)
 
@@ -28,6 +29,7 @@ instance C.Creatable Ship where
         bullets = [], 
         bombs = 0, 
         size = (40,20),
+        borders = border s,
         anim = cycle $ playerShip s
     } 
 
@@ -56,8 +58,8 @@ instance C.Handle Ship where
 
 instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship
-    tick f s@Ship{pos = p, speed = v, direction = d, gun = g, bullets =  bs, anim = a} = let 
-        np =  p L.+ v L.* d
+    tick f s@Ship{pos = p, speed = v, direction = d, gun = g, bullets =  bs, borders = bo, anim = a} = let 
+        np = C.reBorder bo (p L.+ v L.* d)
         tb = C.tick f bs
         tg = C.tick f g
         (ng', nb) = shoot np (1,0) tg
