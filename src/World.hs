@@ -122,10 +122,14 @@ damageAllEnemies seed bs es =
 replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
 replaceDirection e s = map shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
-                          shipDirection e' = e' {E.direction = forward (normalizeV (calcVector (E.pos e') (S.pos s))) }
+                          shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
                           calcVector (x1,y1) (x2,y2) =(x2-x1, y2-y1)
-                          forward (x,y) = (- (abs x),y)
+                          maxAngle d@(x,y) | x>0           =  (-1,y)
+                                           | y> maxAngle'  =  (-1,maxAngle')
+                                           | y< -maxAngle' =  (-1,-maxAngle')
+                                           | otherwise     = d
+                                        where maxAngle' = 0.8
 
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
 spawnEnemy s d e = e5:e4:e3:e2:e1:e
