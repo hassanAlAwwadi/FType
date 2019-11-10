@@ -39,8 +39,8 @@ instance C.Paint Enemy where
          pe = translate x y enemyDrawing 
          in pictures [pe,pb] where 
          enemyDrawing = color (c g) $ rectangleSolid s s 
-          where c (G.Simple _ _ _ _ _)        = red
-                c (G.SpreadShot _ _ _ _ _ _ _)    = green
+          where c G.Simple{}        = red
+                c G.SpreadShot{}    = green
     paint GraveMarker{bullets = b, pos = (x,y), deathAnim = p:_} = pictures [translate x y $ scale 0.5 0.5 p, C.paint b]
     paint GraveMarker{bullets = b} = C.paint b
 
