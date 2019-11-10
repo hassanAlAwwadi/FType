@@ -17,7 +17,7 @@ instance Tick Gun where
 -- | the "level 1" specs of the three weapon types
 simple, simpleShip, spreadShot :: Gun
 simple     = Simple     {cal = 5, power = 1, speed = 8, cooldown = 1, countdown = 1 }
-simpleShip     = Simple     {cal = 10, power = 4, speed = 11, cooldown = 0.6, countdown = 1 }
+simpleShip     = Simple     {cal = 10, power = 1, speed = 11, cooldown = 0.6, countdown = 1 }
 spreadShot = SpreadShot {cal = 7, power = 1, speed = 8, cooldown = 1  , countdown = 1  , amount = 3, angle = 15 }
 
 

@@ -21,7 +21,7 @@ instance C.Creatable Enemy where
         pos = (10,10), 
         speed = 5, 
         direction = (0,0), 
-        health = 10, 
+        health = 1, 
         gun = simple, 
         bullets = [],
         deathAnim = blank : explosion stat
