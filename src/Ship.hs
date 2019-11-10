@@ -1,4 +1,4 @@
-module Ship(Ship, bullets, Ship.powerUp, pos) where
+module Ship(Ship, bullets,Ship.powerUp, pos, p1c, p2c, controls) where
 
 import qualified Classess as C
 import Resources(Border, playerShip, border)
@@ -17,8 +17,33 @@ data Ship = Ship {
     bombs :: Int,
     size :: (Float,Float),
     borders :: Border,
+    controls :: Event -> Ship -> Ship,
     anim :: [Picture]
-} deriving (Show)
+} 
+
+p1c :: Event -> Ship -> Ship
+p1c e s@Ship{direction = (xd,yd)} = case e of   
+    (EventKey (Char 'w') Down _ _) -> s { direction = ( xd,  1 ) }
+    (EventKey (Char 's') Down _ _) -> s { direction = ( xd, -1 ) }
+    (EventKey (Char 'd') Down _ _) -> s { direction = (  1, yd ) }
+    (EventKey (Char 'a') Down _ _) -> s { direction = ( -1, yd ) }
+    (EventKey (Char 'w') Up   _ _) -> s { direction = ( xd,  0 ) }
+    (EventKey (Char 's') Up   _ _) -> s { direction = ( xd,  0 ) }
+    (EventKey (Char 'd') Up   _ _) -> s { direction = (  0, yd ) }
+    (EventKey (Char 'a') Up   _ _) -> s { direction = (  0, yd)  }
+    _                          -> s
+
+p2c :: Event -> Ship -> Ship
+p2c e s@Ship{direction = (xd,yd)} = case e of   
+    (EventKey (Char 'i') Down _ _) -> s { direction = ( xd,  1 ) }
+    (EventKey (Char 'k') Down _ _) -> s { direction = ( xd, -1 ) }
+    (EventKey (Char 'l') Down _ _) -> s { direction = (  1, yd ) }
+    (EventKey (Char 'j') Down _ _) -> s { direction = ( -1, yd ) }
+    (EventKey (Char 'i') Up   _ _) -> s { direction = ( xd,  0 ) }
+    (EventKey (Char 'k') Up   _ _) -> s { direction = ( xd,  0 ) }
+    (EventKey (Char 'l') Up   _ _) -> s { direction = (  0, yd ) }
+    (EventKey (Char 'j') Up   _ _) -> s { direction = (  0, yd)  }
+    _                          -> s
 
 instance C.Creatable Ship where
     create s _ = Ship{ 
@@ -30,6 +55,7 @@ instance C.Creatable Ship where
         bombs = 0, 
         size = (40,20),
         borders = border s,
+        controls = p1c,
         anim = cycle $ playerShip s
     } 
 
@@ -45,16 +71,7 @@ instance C.Paint Ship where
 
 instance C.Handle Ship where
     --handle :: Event -> Ship -> IO Ship
-    handle e s@Ship{direction = (xd,yd)} = case e of 
-        EventKey (Char 'w') Down _ _ -> s { direction = ( xd,  1 ) }
-        EventKey (Char 's') Down _ _ -> s { direction = ( xd, -1 ) }
-        EventKey (Char 'd') Down _ _ -> s { direction = (  1, yd ) }
-        EventKey (Char 'a') Down _ _ -> s { direction = ( -1, yd ) }
-        EventKey (Char 'w') Up   _ _ -> s { direction = ( xd,  0 ) }
-        EventKey (Char 's') Up   _ _ -> s { direction = ( xd,  0 ) }
-        EventKey (Char 'd') Up   _ _ -> s { direction = (  0, yd ) }
-        EventKey (Char 'a') Up   _ _ -> s { direction = (  0, yd)  }
-        _                            -> s
+    handle e s@Ship{controls = c} = c e s
 
 instance C.Tick Ship where
     --tick :: Float -> Ship -> IO Ship

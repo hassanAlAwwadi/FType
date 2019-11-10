@@ -10,7 +10,7 @@ import qualified Data.Ord as D (Down(..), comparing)
 import Classess as C
 import Resources as R(StaticResource, DynamicResource)
 import qualified World as W(stat, dyn, score)
-import World(World, lives)
+import World(World, lives, withPlayer2)
 import Menu(Menu, createMenu, menuAction)
 
 import Graphics.Gloss.Interface.IO.Game
@@ -27,7 +27,8 @@ instance Creatable Game where
 
 mainMenu :: StaticResource -> DynamicResource -> Menu (IO Game)
 mainMenu s d = createMenu [
-    ("play game", pure $ Playing w), 
+    ("play game", pure $ Playing w),
+    ("2 player", pure $ Playing $ withPlayer2 w), 
     ("HighScore", loadHighScore s d "HighScores.txt" ),
     ("Quit Game", exitSuccess)
     ] where

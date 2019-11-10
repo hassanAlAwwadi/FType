@@ -17,8 +17,8 @@ data Enemy = Enemy{ size :: Float, pos :: Point, speed :: Float, direction :: Ve
 
 damage :: Enemy -> Float -> StdGen -> (StdGen, (Enemy, Maybe PowerUp))
 damage e@GraveMarker{} _ rng = (rng, (e, Nothing)) 
-damage e@Enemy{health = h, pos = p} amount rng 
-    | h > amount = (rng, (e{health = h - amount}, Nothing))
+damage e@Enemy{health = h, pos = p} am rng 
+    | h > am = (rng, (e{health = h - am}, Nothing))
     | otherwise  = 
         let (randomVal, nextRng) = randomR (0::Int, 100) rng
             powerup = randomPowerUp randomVal

@@ -1,10 +1,10 @@
 {-# LANGUAGE TypeApplications#-}
-module World(World, lives, score, resetWorld, scroll, stat, dyn) where
+module World(World, withPlayer2, lives, score, resetWorld, scroll, stat, dyn) where
 
 
 import Data.List(partition)
-import System.Random
 import Control.Arrow(second)
+import System.Random
 
 import Graphics.Gloss
 import Graphics.Gloss.Data.Vector
@@ -12,12 +12,12 @@ import Graphics.Gloss.Data.Vector
 import Classess
 import Resources
 
-import qualified Ship as S(Ship, bullets, powerUp,pos)
+import qualified Ship as S(Ship, bullets, powerUp,pos, p2c, controls)
 import qualified Enemy as E (Enemy,Enemy(GraveMarker),gun,health, bullets, damage, deadly,direction,pos, cullTarget)
 import Weapon(Bullet, PowerUp, dmg,spreadShot)
 
 data World = World {
-    player :: S.Ship, 
+    players :: [S.Ship], 
     enemies :: [E.Enemy],
     lives :: Int, 
     score :: Int,
@@ -31,7 +31,7 @@ data World = World {
 
 instance Creatable World where
     create s d = World {
-        player = create s d,
+        players = [create s d],
         enemies = [],
         lives = 3,
         score = 0,
@@ -42,10 +42,13 @@ instance Creatable World where
         dyn = d,
         state = Scrolling 0.5
     }
-    
+
+withPlayer2 :: World -> World 
+withPlayer2 w@World{stat = s, dyn = d} = w{players = [create s d, repos (0,100) $ (create s d){S.controls = S.p2c}]}
+
 resetWorld :: World -> World
 resetWorld w@World{stat = s, dyn = d} = w{
-    player = create s d,
+    players = case players w of [_] -> [create s d] ; [_, _] -> [create s d, repos (0,100) $ (create s d){S.controls = S.p2c}] ; _ -> [],
     enemies = [],
     lives = 3,
     level = 0,
@@ -57,7 +60,7 @@ scroll :: Float -> World -> World
 scroll xdelta w@World { enemies = e } = w{ enemies = map (reposWithChildren (xdelta, 0)) e }
 
 instance Paint World where
-    paint World{player = p, enemies = es, powerUps = pus, timer = t} = let 
+    paint World{players = p, enemies = es, powerUps = pus, timer = t} = let 
         pw = paint p
         pe = paint es
         pu = paint pus
@@ -67,48 +70,66 @@ instance Paint World where
 
 
 instance Handle World where
-    -- just pass the handle event to the player ship
-    handle e w =  w {player = handle e $ player w}
+    -- just pass the handle event to the player1 ship
+    handle e w =  w {players = handle e <$> players w}
 
 instance Tick World where 
     tick f world = let 
         -- scroll the entire world
         w = scroll f world
         -- simple ticks
-        p = tick f $ player w
+        ps = tick f  <$> players w
+
         e = tick f $ enemies w
         t = timer (w::World) + f
 
         -- remove enemies that have gone out of the border range
         e' =  filter (not . E.cullTarget) e
         -- damage enemies after the tick event
-        (nextRNG, e'', newups) = damageAllEnemies (rng $ dyn w) (S.bullets p) e'
+        (nextRNG, e'', newups) = damageAllEnemies (rng $ dyn w) (ps >>= S.bullets) e'
         ups = newups ++ powerUps w
 
         -- upgrade the player with powerups
-        (touchedUps, freeUps) = partition (checkCollision p) ups
-        upgradedP = foldr (flip S.powerUp) p touchedUps
+        (upgradedPs, remainingUps) = upgradeMulti ps ups []
 
-        e''' | round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 = spawnEnemy (stat w) (dyn w) e''
-             | otherwise = e''
+        enext = if round t `mod` 5 == 0 && round (timer (w::World)) `mod` 5 /= 0 
+               then spawnEnemy (stat w) (dyn w) e''
+               else e''
 
-        -- let enemies move to player
-        eToP =  replaceDirection e''' upgradedP
-        -- reset world if player is hit
+        -- let enemies move to player1
+
+        eToP =  replaceDirection enext upgradedPs
+        -- reset world if player1 is hit
         -- update it otherwise
-        nw = if  playerhit p e
+        nw = if  playerhit eToP upgradedPs 
              then (resetWorld w) {lives = lives w -1, score = score w + floor t} 
              else w {
-                player = upgradedP,
+                players = upgradedPs,
                 enemies = eToP,
                 timer = t,
-                powerUps = freeUps,
+                powerUps = remainingUps,
                 dyn = (dyn w){ rng = nextRNG }
                 }
                  
-        in nw where
-            playerhit p es = any (\e -> E.deadly e && checkCollision p e) es || any (checkCollision p) (es >>= E.bullets)
-        
+        in nw 
+
+playerhit :: [E.Enemy] -> [S.Ship] -> Bool
+playerhit es ps = or [checkCollision a b | a <- ps, b <- es, E.deadly b] || or [checkCollision a b | a <- ps, b <- es >>= E.bullets]
+
+upgradeSingle :: S.Ship -> [PowerUp] -> S.Ship
+upgradeSingle = foldr (flip S.powerUp)
+
+checkTouch ::   S.Ship -> [PowerUp] -> ([PowerUp], [PowerUp])
+checkTouch p = partition (checkCollision p)
+
+upgradeMulti :: [S.Ship] -> [PowerUp] -> [S.Ship] -> ([S.Ship],[PowerUp])
+upgradeMulti (p:ps) ups acc = let 
+    (touched, remaining) = checkTouch p ups
+    pUpp = upgradeSingle p touched
+    nAcc = pUpp : acc
+    in upgradeMulti ps remaining nAcc
+upgradeMulti [] ups acc = (acc, ups)
+                        
 damageAllEnemies :: StdGen -> [Bullet] -> [E.Enemy] -> (StdGen, [E.Enemy], [PowerUp])
 damageAllEnemies seed bs es = 
     let 
@@ -121,8 +142,8 @@ damageAllEnemies seed bs es =
     in  foldr go (seed, [], []) enemyDamage 
 
 --redirects the enemies to the player
-replaceDirection :: [E.Enemy] -> S.Ship -> [E.Enemy]
-replaceDirection e s = map shipDirection e
+replaceDirection :: [E.Enemy] -> [S.Ship] -> [E.Enemy]
+replaceDirection e [s] = map shipDirection e
                     where shipDirection e'@E.GraveMarker{} = e'
                           shipDirection e' = e' {E.direction = maxAngle (normalizeV (calcVector (E.pos e') (S.pos s))) }
                           calcVector :: Vector -> Vector -> Vector
@@ -133,6 +154,9 @@ replaceDirection e s = map shipDirection e
                                            | y< -maxAngle' =  (-1,-maxAngle')
                                            | otherwise     = d
                                         where maxAngle' = 0.8
+
+replaceDirection e (s:_) = replaceDirection e [s]
+replaceDirection e _ = e
 
 --spawn 5 enemys with 2 spreadshot enemies with extra life
 spawnEnemy :: StaticResource -> DynamicResource -> [E.Enemy] -> [E.Enemy]
