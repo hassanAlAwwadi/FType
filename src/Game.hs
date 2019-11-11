@@ -2,7 +2,8 @@ module Game where
 
 import System.Exit(exitSuccess)
 import System.IO (readFile) 
-import Data.Maybe as M(fromMaybe)
+import Data.Maybe as M(fromMaybe, mapMaybe)
+import Text.Read(readMaybe)
 import Data.List as S(sortBy) 
 import Data.Char
 import qualified Data.Ord as D (Down(..), comparing) 
@@ -46,7 +47,7 @@ loadHighScore :: StaticResource -> DynamicResource -> String -> IO Game
 loadHighScore st dn fileName = do 
     file' <- readOrCreateFile fileName
     let filelines = lines file'
-    let scores = sortBy (D.comparing $ D.Down . snd) $ map read filelines
+    let scores = sortBy (D.comparing $ D.Down . snd) $ mapMaybe readMaybe filelines
     return $ HighScores { mvps = scores, scrollDown = False, scrollUp = False, scrollDelta = 0, stat = st, dyn = dn }
 
 --write the highscores
